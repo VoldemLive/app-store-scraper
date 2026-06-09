@@ -3,7 +3,53 @@
 This package exposes `app-store-scraper` tools and reference resources through
 an MCP server over stdio.
 
-The package requires Node.js 20 or newer.
+The package requires Node.js 20.18.1 or newer.
+
+## Run with npx
+
+Pin the version in client configuration for reproducible startup:
+
+```sh
+npx -y app-store-scraper-mcp@0.1.0
+```
+
+For a direct installation:
+
+```sh
+npm install --global app-store-scraper-mcp@0.1.0
+app-store-mcp
+```
+
+## Client configuration
+
+Claude Desktop and other clients that use the `mcpServers` JSON format:
+
+```json
+{
+  "mcpServers": {
+    "app-store": {
+      "command": "npx",
+      "args": ["-y", "app-store-scraper-mcp@0.1.0"],
+      "env": {
+        "MCP_LOG_LEVEL": "warn",
+        "MCP_REQUEST_TIMEOUT_MS": "10000"
+      }
+    }
+  }
+}
+```
+
+Codex configuration:
+
+```toml
+[mcp_servers.app_store]
+command = "npx"
+args = ["-y", "app-store-scraper-mcp@0.1.0"]
+
+[mcp_servers.app_store.env]
+MCP_LOG_LEVEL = "warn"
+MCP_REQUEST_TIMEOUT_MS = "10000"
+```
 
 ## Local development
 
@@ -35,6 +81,8 @@ Operational and fatal diagnostics are written to stderr.
 
 Invalid configuration stops startup and writes a generic diagnostic to stderr
 without echoing environment values.
+
+Environment values in JSON or TOML client configuration must be strings.
 
 ## Response controls
 
@@ -78,9 +126,33 @@ resources, and invoke them.
 ## Verification
 
 ```sh
-npm run lint
-npm test
+npm run check
+npm run package:smoke
 ```
 
 The end-to-end tests launch the compiled executable as a child process and
 verify initialization, ping, startup failure output, and graceful shutdown.
+The package smoke test packs the artifact, verifies its contents and executable
+permissions, installs it into a temporary project, and completes a stdio
+handshake.
+
+## Troubleshooting
+
+- `MCP server startup failed.`: validate environment variable values and run
+  the pinned `npx` command directly to inspect stderr.
+- Client cannot find `npx` or `app-store-mcp`: use an absolute executable path
+  in the client configuration or install Node.js 20.18.1+ for the client
+  process.
+- Requests time out or are rate-limited: adjust the validated
+  `MCP_REQUEST_TIMEOUT_MS`, `MCP_REQUEST_RETRIES`, and
+  `MCP_REQUEST_THROTTLE_RPS` server settings.
+- Client receives `RESPONSE_TOO_LARGE`: request compact mode, select fields, or
+  reduce `maxItems`; raise the server limit only when the client can handle it.
+
+## Upgrading
+
+Change the pinned package version, restart the MCP client, and verify its tool
+and resource list before relying on new capabilities. Patch releases preserve
+public behavior, minor releases may add optional capabilities, and major
+releases may contain breaking contract changes. See the repository's
+`docs/mcp-release.md` for the full compatibility and release policy.
