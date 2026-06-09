@@ -102,7 +102,7 @@ test('closes gracefully on SIGTERM without writing to stdout', async () => {
     stderr += chunk.toString();
   });
 
-  await new Promise(resolveDelay => setTimeout(resolveDelay, 200));
+  await new Promise(resolveDelay => setTimeout(resolveDelay, 2000));
   child.kill('SIGTERM');
   const [code, signal] = await once(child, 'exit');
 
