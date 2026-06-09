@@ -1,15 +1,34 @@
-# app-store-scraper [![Build Status](https://secure.travis-ci.org/facundoolano/app-store-scraper.png)](http://travis-ci.org/facundoolano/app-store-scraper)
-Node.js module to scrape application data from the iTunes/Mac App Store.
-The goal is to provide an interface as close as possible to the
-[google-play-scraper](https://github.com/facundoolano/google-play-scraper) module.
+# app-store-scraper
 
-## Installation
-```
-npm install app-store-scraper
+App Store market data scraper with a local Model Context Protocol (MCP) server.
+The scraper covers app metadata, search, charts, developer catalogs,
+suggestions, similar apps, reviews, ratings, privacy disclosures, and version
+history.
+
+## Local setup
+
+Requirements:
+
+- Node.js 20.18.1 or newer for the complete repository and MCP server.
+- Network access to Apple's public App Store endpoints.
+
+```sh
+git clone https://github.com/VoldemLive/app-store-scraper.git
+cd app-store-scraper
+npm run setup
 ```
 
-This package requires Node.js 16 or newer and is published as an ES module.
-CommonJS `require()` is not supported.
+The scraper is an ES module. CommonJS `require()` is not supported.
+
+## Project commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run setup` | Install scraper and MCP dependencies |
+| `npm start` | Build and start the stdio MCP server |
+| `npm run build` | Compile the TypeScript MCP server |
+| `npm test` | Run scraper tests, including live App Store integration checks |
+| `npm run check` | Run scraper lint/tests/secret scan and all MCP checks |
 
 ## Security
 
@@ -20,12 +39,21 @@ configuration, verification, rotation, and incident-response guidance.
 
 ## MCP server
 
-An extensible MCP server is planned around the scraper's public API. The
-[MCP server architecture](docs/architecture/mcp-server.md) defines the stable
-tool and resource contracts, provider boundaries, security model, and delivery
-sequence for stdio, OCR, Apple Ads, and future transports. The initial
-[TypeScript stdio server](packages/mcp-server/README.md) is developed as a
-separate Node.js 20+ package.
+The implemented [TypeScript stdio MCP server](packages/mcp-server/README.md)
+exposes every current scraper capability through ten read-only tools. It also
+provides App Store reference resources, reusable market-analysis prompts,
+bounded responses, cancellation, caching, retries, throttling, and normalized
+errors.
+
+Start it from the repository root:
+
+```sh
+npm start
+```
+
+Apple Ads is intentionally limited to an unsupported provider contract stub.
+OCR and remote HTTP transport are deferred and are not required for the local
+App Store scraper or stdio MCP server.
 
 ## Usage
 Available methods:
@@ -133,8 +161,8 @@ Results:
 
 Retrieves a list of applications from one of the collections at iTunes. Options:
 
-* `collection`: the collection to look up. Defaults to `collection.TOP_FREE_IOS`, available options can be found [here](https://github.com/facundoolano/app-store-scraper/blob/master/lib/constants.js#L3).
-* `category`: the category to look up. This is a number associated with the genre for the application. Defaults to no specific category. Available options can be found [here](https://github.com/facundoolano/app-store-scraper/blob/master/lib/constants.js#L19).
+* `collection`: the collection to look up. Defaults to `collection.TOP_FREE_IOS`, available options can be found in [`lib/constants.js`](lib/constants.js).
+* `category`: the category to look up. This is a number associated with the genre for the application. Defaults to no specific category. Available options can be found in [`lib/constants.js`](lib/constants.js).
 * `country`: the two letter country code to get the list from. Defaults to `us`.
 * `lang`: language code for the result text. Defaults to undefined, so country specific language should be used automatically.
 * `num`: the amount of elements to retrieve. Defaults to `50`, maximum

@@ -1,6 +1,7 @@
 {
   "name": "app-store-scraper-mcp",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "private": true,
   "description": "App Store scraper MCP server for stdio clients",
   "type": "module",
   "main": "dist/src/index.js",
@@ -19,12 +20,11 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/cli.js",
+    "dev": "npm run build && npm run start",
     "lint": "eslint .",
     "test": "npm run build && node --test $(find dist/test -name '*.test.js')",
-    "check": "npm run lint && npm test",
-    "check:release-tag": "node scripts/check-release-tag.mjs",
-    "prepack": "npm run build && node scripts/prepare-package.mjs",
-    "package:smoke": "node scripts/package-smoke.mjs"
+    "check": "npm run lint && npm test"
   },
   "repository": {
     "type": "git",
@@ -45,7 +45,7 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "app-store-scraper": "https://github.com/VoldemLive/app-store-scraper/archive/b083d820f6bf94ca0f225008ce82cbe104e0969c.tar.gz",
+    "app-store-scraper": "file:../..",
     "zod": "^4.4.3"
   },
   "devDependencies": {

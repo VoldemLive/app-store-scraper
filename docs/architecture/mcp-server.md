@@ -29,9 +29,9 @@ the existing scraper API or runtime behavior.
 ## Package and layer boundaries
 
 The MCP implementation lives in a separately buildable TypeScript package. The
-package targets Node.js 20 or newer, uses the official TypeScript MCP SDK, and
-uses Zod as the source of runtime validation and JSON schemas. The existing
-scraper package keeps its independently versioned Node.js support policy.
+repository targets Node.js 20.18.1 or newer, uses the official TypeScript MCP
+SDK, uses Zod as the source of runtime validation and JSON schemas, and runs
+the MCP server against the scraper from the same checkout.
 
 The initial target structure is:
 
@@ -358,15 +358,13 @@ Each implementation ticket includes its relevant tests and documentation:
 - response-limit, cancellation, redaction, and SSRF-related tests;
 - opt-in live provider smoke tests that are not required for deterministic CI.
 
-The published stdio package must pass an installation and handshake smoke test
-from a temporary project before release.
+The local stdio server must pass build, initialization, handshake, discovery,
+and graceful-shutdown integration tests before release.
 
-## Delivery sequence
+## Delivery status
 
-1. Scaffold the separately packaged TypeScript stdio server.
-2. Add provider contracts and the App Store scraper adapter.
-3. Expose all App Store tools and reference resources.
-4. Apply shared response, network, execution, and security controls.
-5. Package and publish the App Store-only stdio server.
-6. Add prompts and optional OCR and Apple Ads providers independently.
-7. Add Streamable HTTP only after stdio contracts are stable.
+The local App Store scraper and stdio MCP baseline is complete: provider
+contracts, tools, resources, prompts, shared controls, security checks, tests,
+and local documentation are implemented. Apple Ads remains a contract-only
+stub. OCR providers and Streamable HTTP remain deferred independent
+extensions.
