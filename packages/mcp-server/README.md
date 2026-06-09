@@ -3,7 +3,7 @@
 This package exposes `app-store-scraper` tools and reference resources through
 an MCP server over stdio.
 
-The package requires Node.js 20 or newer.
+The package requires Node.js 20.18.1 or newer.
 
 ## Run with npx
 
@@ -141,7 +141,8 @@ handshake.
 - `MCP server startup failed.`: validate environment variable values and run
   the pinned `npx` command directly to inspect stderr.
 - Client cannot find `npx` or `app-store-mcp`: use an absolute executable path
-  in the client configuration or install Node.js 20+ for the client process.
+  in the client configuration or install Node.js 20.18.1+ for the client
+  process.
 - Requests time out or are rate-limited: adjust the validated
   `MCP_REQUEST_TIMEOUT_MS`, `MCP_REQUEST_RETRIES`, and
   `MCP_REQUEST_THROTTLE_RPS` server settings.
