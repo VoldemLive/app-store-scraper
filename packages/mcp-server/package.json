@@ -1,12 +1,16 @@
 {
-  "name": "@app-store-scraper/mcp-server",
+  "name": "app-store-scraper-mcp",
   "version": "0.1.0",
-  "private": true,
-  "description": "Extensible MCP server for app-store-scraper",
+  "description": "App Store scraper MCP server for stdio clients",
   "type": "module",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "exports": "./dist/src/index.js",
+  "files": [
+    "dist/src",
+    "README.md",
+    "LICENSE"
+  ],
   "bin": {
     "app-store-mcp": "dist/src/cli.js"
   },
@@ -17,11 +21,31 @@
     "build": "tsc -p tsconfig.json",
     "lint": "eslint .",
     "test": "npm run build && node --test $(find dist/test -name '*.test.js')",
-    "check": "npm run lint && npm test"
+    "check": "npm run lint && npm test",
+    "check:release-tag": "node scripts/check-release-tag.mjs",
+    "prepack": "npm run build && node scripts/prepare-package.mjs",
+    "package:smoke": "node scripts/package-smoke.mjs"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VoldemLive/app-store-scraper.git",
+    "directory": "packages/mcp-server"
+  },
+  "homepage": "https://github.com/VoldemLive/app-store-scraper/tree/master/packages/mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/VoldemLive/app-store-scraper/issues"
+  },
+  "keywords": [
+    "app-store",
+    "mcp",
+    "model-context-protocol",
+    "scraper",
+    "stdio"
+  ],
+  "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "app-store-scraper": "file:../..",
+    "app-store-scraper": "https://github.com/VoldemLive/app-store-scraper/archive/b083d820f6bf94ca0f225008ce82cbe104e0969c.tar.gz",
     "zod": "^4.4.3"
   },
   "devDependencies": {
