@@ -99,3 +99,53 @@ test('rejects prompt retrieval when required identifiers are missing', async () 
     arguments: { country: 'us' }
   }));
 });
+
+test('rejects unsupported country code in analysis prompt', async () => {
+  const { client } = await startTestServer();
+  await assert.rejects(() => client.getPrompt({
+    name: 'app_store_analyze_market',
+    arguments: { term: 'productivity', country: 'xx' }
+  }));
+});
+
+test('accepts supported country code in lowercase for analysis prompt', async () => {
+  const { client } = await startTestServer();
+  const result = await client.getPrompt({
+    name: 'app_store_analyze_market',
+    arguments: { term: 'productivity', country: 'gb' }
+  });
+  assert.match(text(result), /GB/);
+});
+
+test('accepts supported country code in uppercase for analysis prompt', async () => {
+  const { client } = await startTestServer();
+  const result = await client.getPrompt({
+    name: 'app_store_analyze_market',
+    arguments: { term: 'productivity', country: 'GB' }
+  });
+  assert.match(text(result), /GB/);
+});
+
+test('rejects unsupported country code in competitor comparison prompt', async () => {
+  const { client } = await startTestServer();
+  await assert.rejects(() => client.getPrompt({
+    name: 'app_store_compare_competitors',
+    arguments: { appIdentifiers: '123', country: 'zz' }
+  }));
+});
+
+test('rejects unsupported country code in listing audit prompt', async () => {
+  const { client } = await startTestServer();
+  await assert.rejects(() => client.getPrompt({
+    name: 'app_store_audit_listing',
+    arguments: { appIdentifier: '284882215', country: 'xx' }
+  }));
+});
+
+test('rejects unsupported country code in reviews and ratings prompt', async () => {
+  const { client } = await startTestServer();
+  await assert.rejects(() => client.getPrompt({
+    name: 'app_store_analyze_reviews_and_ratings',
+    arguments: { appIdentifier: '284882215', country: 'xx' }
+  }));
+});

@@ -1,17 +1,11 @@
-import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { AppStoreProvider } from '../../../providers/app-store/types.js';
 import { ErrorCode, ProviderError } from '../../../errors/index.js';
 import { responseControlShape, type ResponseControls, type ToolExecutor } from '../../../application/index.js';
-import { markets } from 'app-store-scraper';
+import { z } from 'zod';
+import { countryInput } from '../../../schemas/index.js';
 
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const;
-const supportedCountries = new Set(Object.keys(markets));
-const countryInput = z.string().length(2)
-  .refine(country => supportedCountries.has(country.toUpperCase()), 'Unsupported App Store country code')
-  .transform(country => country.toLowerCase())
-  .optional()
-  .describe('Supported two-letter App Store country code (default: us; see app-store://reference/markets)');
 
 function controls (
   responseMode?: 'compact' | 'full',

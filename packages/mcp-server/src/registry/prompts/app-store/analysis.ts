@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { countryInput } from '../../../schemas/index.js';
 
-const country = z.string().length(2).optional().describe('Two-letter App Store country code (default: us)');
 const appIdentifier = z.string().min(1).describe('Numeric App Store ID or bundle identifier');
 
 function prompt (text: string) {
@@ -25,7 +25,7 @@ export function registerAppStoreAnalysisPrompts (server: McpServer): void {
     description: 'Analyze an App Store search market, chart category, and leading apps.',
     argsSchema: {
       term: z.string().min(1).describe('Market or search term to analyze'),
-      country,
+      country: countryInput,
       category: z.string().optional().describe('Optional category name or numeric category ID')
     }
   }, ({ term, country, category }) => prompt(`Analyze the App Store market for "${term}" in ${(country ?? 'us').toUpperCase()}.
@@ -45,7 +45,7 @@ ${evidenceRules}`));
     description: 'Compare two or more App Store apps using listing, rating, privacy, and version data.',
     argsSchema: {
       appIdentifiers: z.string().min(1).describe('Comma-separated numeric IDs or bundle identifiers'),
-      country
+      country: countryInput
     }
   }, ({ appIdentifiers, country }) => prompt(`Compare these App Store competitors in ${(country ?? 'us').toUpperCase()}: ${appIdentifiers}.
 
@@ -65,7 +65,7 @@ ${evidenceRules}`));
     description: 'Audit one App Store listing for clarity, positioning, trust, and conversion opportunities.',
     argsSchema: {
       appIdentifier,
-      country
+      country: countryInput
     }
   }, ({ appIdentifier, country }) => prompt(`Audit the App Store listing for ${appIdentifier} in ${(country ?? 'us').toUpperCase()}.
 
@@ -83,7 +83,7 @@ ${evidenceRules}`));
     description: 'Analyze review themes and rating distribution for one App Store app.',
     argsSchema: {
       appIdentifier,
-      country
+      country: countryInput
     }
   }, ({ appIdentifier, country }) => prompt(`Analyze reviews and ratings for ${appIdentifier} in ${(country ?? 'us').toUpperCase()}.
 

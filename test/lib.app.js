@@ -113,6 +113,26 @@ describe('App method', () => {
       });
   });
 
+  it('should reject with validation error when called without options', (done) => {
+    store.app()
+      .then(() => done('should not resolve'))
+      .catch((err) => {
+        assert.equal(err.message, 'Either id or appId is required');
+        done();
+      })
+      .catch(done);
+  });
+
+  it('should reject with validation error when id and appId are both missing', (done) => {
+    store.app({})
+      .then(() => done('should not resolve'))
+      .catch((err) => {
+        assert.equal(err.message, 'Either id or appId is required');
+        done();
+      })
+      .catch(done);
+  });
+
   it('should reject the promise for an invalid id', (done) => {
     store.app({id: '123'})
       .then(() => done('should not resolve'))
