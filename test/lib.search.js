@@ -43,6 +43,24 @@ describe('Search method', () => {
       });
   });
 
+  it('should reject invalid result counts', () => {
+    return Promise.all([0, -1, 1.5].map((num) => store.search({ term: 'vr', num })
+      .then(assert.fail)
+      .catch((e) => assert.equal(e.message, 'num must be a positive integer'))));
+  });
+
+  it('should reject result counts greater than 200', () => {
+    return store.search({ term: 'vr', num: 201 })
+      .then(assert.fail)
+      .catch((e) => assert.equal(e.message, 'Cannot retrieve more than 200 apps'));
+  });
+
+  it('should reject invalid page numbers', () => {
+    return Promise.all([0, -1, 1.5].map((page) => store.search({ term: 'vr', page })
+      .then(assert.fail)
+      .catch((e) => assert.equal(e.message, 'page must be a positive integer'))));
+  });
+
   it('should be able to set requestOptions', (done) => {
     store.search({
       term: 'vr',

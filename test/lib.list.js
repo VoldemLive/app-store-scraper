@@ -43,6 +43,12 @@ describe('List method', () => {
       .catch((e) => assert.equal(e.message, 'Cannot retrieve more than 200 apps'));
   });
 
+  it('should reject invalid result counts', () => {
+    return Promise.all([0, -1, 1.5].map((num) => store.list({ num })
+      .then(assert.fail)
+      .catch((e) => assert.equal(e.message, 'num must be a positive integer'))));
+  });
+
   it('should fetch apps with fullDetail', () => {
     return store.list({
       collection: store.collection.TOP_FREE_GAMES_IOS,

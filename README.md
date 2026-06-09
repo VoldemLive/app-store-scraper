@@ -178,7 +178,7 @@ Returns:
 Retrieves a list of apps that results of searching by the given term. Options:
 
 * `term`: the term to search for (required).
-* `num`: the amount of elements to retrieve. Defaults to `50`.
+* `num`: the amount of elements to retrieve. Defaults to `50`, maximum allowed is `200`.
 * `page`: page of results to retrieve. Defaults to to `1`.
 * `country`: the two letter country code to get the similar apps
   from. Defaults to `us`.
