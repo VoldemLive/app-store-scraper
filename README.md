@@ -493,3 +493,9 @@ memoized.app({id: 553834731}) // will make a request
 
 The options available are those supported by the [memoizee](https://github.com/medikoo/memoizee) module.
 By default up to 1000 values are cached by each method and they expire after 5 minutes.
+
+### Request options
+
+Scraper methods accept a `requestOptions` object for advanced HTTP configuration.
+The options are passed to Node.js [`http.request`](https://nodejs.org/api/http.html#httprequestoptions-callback).
+Options specific to the deprecated `request` package are no longer supported.
