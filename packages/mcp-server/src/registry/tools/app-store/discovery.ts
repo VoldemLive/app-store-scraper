@@ -2,7 +2,8 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { collection as collectionConst, category as categoryConst } from 'app-store-scraper';
 import type { AppStoreProvider } from '../../../providers/app-store/types.js';
-import { ProviderError } from '../../../errors/index.js';
+import { ErrorCode, ProviderError } from '../../../errors/index.js';
+import { responseControlShape, type ResponseControls, type ToolExecutor } from '../../../application/index.js';
 
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const;
 
@@ -12,28 +13,29 @@ const validCategories = new Set(Object.values(categoryConst));
 const countryInput = z.string().length(2).optional().describe('Two-letter ISO country code (default: us)');
 const langInput = z.string().optional().describe('Language code for localised fields (default: en-us)');
 
-function ok (text: string, data: unknown, resultCount: number) {
+function controls (
+  responseMode?: 'compact' | 'full',
+  fields?: string[],
+  maxItems?: number
+): ResponseControls {
   return {
-    content: [{ type: 'text' as const, text }],
-    structuredContent: {
-      data,
-      meta: { provider: 'app-store', resultCount, truncated: false }
-    }
+    ...(responseMode !== undefined && { responseMode }),
+    ...(fields !== undefined && { fields }),
+    ...(maxItems !== undefined && { maxItems })
   };
 }
 
-function fail (error: unknown) {
-  const e = error instanceof ProviderError
-    ? error
-    : new ProviderError('INTERNAL_ERROR' as const, 'Unexpected server error', false);
-  return {
-    isError: true as const,
-    content: [{ type: 'text' as const, text: `Error [${e.code}]: ${e.message}` }],
-    structuredContent: { error: { code: e.code, message: e.message, retryable: e.retryable } }
-  };
+function requireIdentifier (id?: number, appId?: string): void {
+  if ((id === undefined) === (appId === undefined)) {
+    throw new ProviderError(ErrorCode.INVALID_ARGUMENT, 'Provide exactly one of id or appId', false);
+  }
 }
 
-export function registerDiscoveryTools (server: McpServer, provider: AppStoreProvider): void {
+export function registerDiscoveryTools (
+  server: McpServer,
+  provider: AppStoreProvider,
+  executeTool: ToolExecutor
+): void {
   server.tool(
     'app_store_get_app',
     'Retrieve full details for a single App Store app by numeric ID or bundle identifier.',
@@ -45,27 +47,23 @@ export function registerDiscoveryTools (server: McpServer, provider: AppStorePro
       country: countryInput,
       lang: langInput,
       ratings: z.boolean().optional()
-        .describe('Include star-rating histogram in the response (default: false)')
+        .describe('Include star-rating histogram in the response (default: false)'),
+      ...responseControlShape
     },
     READ_ONLY,
-    async ({ id, appId, country, lang, ratings }) => {
-      if (id === undefined && appId === undefined) {
-        return fail(new ProviderError('INVALID_ARGUMENT' as const, 'Provide exactly one of id or appId', false));
-      }
-      try {
+    async ({ id, appId, country, lang, ratings, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_app', extra, controls(responseMode, fields, maxItems), async signal => {
+        requireIdentifier(id, appId);
         const result = await provider.getApp({
           ...(id !== undefined && { id }),
           ...(appId !== undefined && { appId }),
           ...(country !== undefined && { country }),
           ...(lang !== undefined && { lang }),
           ...(ratings !== undefined && { ratings })
-        });
+        }, { signal });
         const score = result.score !== undefined ? ` · ★${result.score.toFixed(1)}` : '';
-        return ok(`${result.title} (${result.appId}) — ${result.developer}${score}`, result, 1);
-      } catch (error) {
-        return fail(error);
-      }
-    }
+        return { text: `${result.title} (${result.appId}) — ${result.developer}${score}`, data: result };
+      })
   );
 
   server.tool(
@@ -74,17 +72,18 @@ export function registerDiscoveryTools (server: McpServer, provider: AppStorePro
     {
       term: z.string().min(1).describe('Search term'),
       num: z.number().int().min(1).max(200).optional()
-        .describe('Maximum results to return (default: 50, max: 200)'),
+        .describe('Maximum upstream results (default: 50, max: 200)'),
       page: z.number().int().min(1).optional()
         .describe('Result page number (default: 1)'),
       country: countryInput,
       lang: langInput,
       idsOnly: z.boolean().optional()
-        .describe('Return only numeric app IDs instead of full app details')
+        .describe('Return only numeric app IDs instead of full app details'),
+      ...responseControlShape
     },
     READ_ONLY,
-    async ({ term, num, page, country, lang, idsOnly }) => {
-      try {
+    async ({ term, num, page, country, lang, idsOnly, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_search_apps', extra, controls(responseMode, fields, maxItems), async signal => {
         const results = await provider.searchApps({
           term,
           ...(num !== undefined && { num }),
@@ -92,17 +91,14 @@ export function registerDiscoveryTools (server: McpServer, provider: AppStorePro
           ...(country !== undefined && { country }),
           ...(lang !== undefined && { lang }),
           ...(idsOnly !== undefined && { idsOnly })
-        });
+        }, { signal });
         const count = results.length;
         const countryLabel = (country ?? 'us').toUpperCase();
         const text = idsOnly === true
           ? `Found ${count} app ID${count !== 1 ? 's' : ''} for "${term}".`
           : `Found ${count} app${count !== 1 ? 's' : ''} for "${term}" in the ${countryLabel} App Store.`;
-        return ok(text, results, count);
-      } catch (error) {
-        return fail(error);
-      }
-    }
+        return { text, data: results };
+      })
   );
 
   server.tool(
@@ -120,13 +116,14 @@ export function registerDiscoveryTools (server: McpServer, provider: AppStorePro
       country: countryInput,
       lang: langInput,
       num: z.number().int().min(1).max(200).optional()
-        .describe('Maximum results (default: 100, max: 200)'),
+        .describe('Maximum upstream results (default: 50, max: 200)'),
       fullDetail: z.boolean().optional()
-        .describe('Return full app details; omit for compact chart summaries (default: false)')
+        .describe('Request full app details from the provider (default: false)'),
+      ...responseControlShape
     },
     READ_ONLY,
-    async ({ collection, category, country, lang, num, fullDetail }) => {
-      try {
+    async ({ collection, category, country, lang, num, fullDetail, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_list_apps', extra, controls(responseMode, fields, maxItems), async signal => {
         const results = await provider.listApps({
           ...(collection !== undefined && { collection }),
           ...(category !== undefined && { category }),
@@ -134,14 +131,14 @@ export function registerDiscoveryTools (server: McpServer, provider: AppStorePro
           ...(lang !== undefined && { lang }),
           ...(num !== undefined && { num }),
           ...(fullDetail !== undefined && { fullDetail })
-        });
+        }, { signal });
         const count = results.length;
         const countryLabel = (country ?? 'us').toUpperCase();
-        return ok(`Found ${count} app${count !== 1 ? 's' : ''} in ${countryLabel} App Store charts.`, results, count);
-      } catch (error) {
-        return fail(error);
-      }
-    }
+        return {
+          text: `Found ${count} app${count !== 1 ? 's' : ''} in ${countryLabel} App Store charts.`,
+          data: results
+        };
+      })
   );
 
   server.tool(
@@ -153,23 +150,21 @@ export function registerDiscoveryTools (server: McpServer, provider: AppStorePro
         z.string().min(1)
       ]).describe('Developer numeric iTunes ID'),
       country: countryInput,
-      lang: langInput
+      lang: langInput,
+      ...responseControlShape
     },
     READ_ONLY,
-    async ({ devId, country, lang }) => {
-      try {
+    async ({ devId, country, lang, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_developer_apps', extra, controls(responseMode, fields, maxItems), async signal => {
         const results = await provider.getDeveloperApps({
           devId,
           ...(country !== undefined && { country }),
           ...(lang !== undefined && { lang })
-        });
+        }, { signal });
         const count = results.length;
         const developerName = results[0]?.developer ?? String(devId);
-        return ok(`Found ${count} app${count !== 1 ? 's' : ''} by ${developerName}.`, results, count);
-      } catch (error) {
-        return fail(error);
-      }
-    }
+        return { text: `Found ${count} app${count !== 1 ? 's' : ''} by ${developerName}.`, data: results };
+      })
   );
 
   server.tool(
@@ -177,21 +172,19 @@ export function registerDiscoveryTools (server: McpServer, provider: AppStorePro
     'Retrieve App Store search suggestions for a partial search term.',
     {
       term: z.string().min(1).describe('Partial search term to get suggestions for'),
-      country: countryInput
+      country: countryInput,
+      ...responseControlShape
     },
     READ_ONLY,
-    async ({ term, country }) => {
-      try {
+    async ({ term, country, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_suggestions', extra, controls(responseMode, fields, maxItems), async signal => {
         const results = await provider.getSuggestions({
           term,
           ...(country !== undefined && { country })
-        });
+        }, { signal });
         const count = results.length;
-        return ok(`Found ${count} suggestion${count !== 1 ? 's' : ''} for "${term}".`, results, count);
-      } catch (error) {
-        return fail(error);
-      }
-    }
+        return { text: `Found ${count} suggestion${count !== 1 ? 's' : ''} for "${term}".`, data: results };
+      })
   );
 
   server.tool(
@@ -203,26 +196,22 @@ export function registerDiscoveryTools (server: McpServer, provider: AppStorePro
       appId: z.string().min(1).optional()
         .describe('App bundle identifier'),
       country: countryInput,
-      lang: langInput
+      lang: langInput,
+      ...responseControlShape
     },
     READ_ONLY,
-    async ({ id, appId, country, lang }) => {
-      if (id === undefined && appId === undefined) {
-        return fail(new ProviderError('INVALID_ARGUMENT' as const, 'Provide exactly one of id or appId', false));
-      }
-      try {
+    async ({ id, appId, country, lang, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_similar_apps', extra, controls(responseMode, fields, maxItems), async signal => {
+        requireIdentifier(id, appId);
         const results = await provider.getSimilarApps({
           ...(id !== undefined && { id }),
           ...(appId !== undefined && { appId }),
           ...(country !== undefined && { country }),
           ...(lang !== undefined && { lang })
-        });
+        }, { signal });
         const count = results.length;
         const label = id !== undefined ? String(id) : (appId ?? '');
-        return ok(`Found ${count} app${count !== 1 ? 's' : ''} similar to ${label}.`, results, count);
-      } catch (error) {
-        return fail(error);
-      }
-    }
+        return { text: `Found ${count} app${count !== 1 ? 's' : ''} similar to ${label}.`, data: results };
+      })
   );
 }

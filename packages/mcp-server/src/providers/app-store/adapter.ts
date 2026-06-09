@@ -6,10 +6,12 @@ import { RatingsSchema } from '../../schemas/ratings.js';
 import { PrivacyDetailsSchema } from '../../schemas/privacy.js';
 import { SuggestionSchema } from '../../schemas/suggest.js';
 import { VersionHistoryItemSchema } from '../../schemas/version-history.js';
-import type { AppStoreProvider, GetAppInput, ListAppsInput, SearchAppsInput, DeveloperAppsInput, AppIdInput, AppIdentifierInput, SuggestInput, ReviewsInput } from './types.js';
+import type { ServerConfig } from '../../config.js';
+import type { AppStoreProvider, ProviderCallContext, GetAppInput, ListAppsInput, SearchAppsInput, DeveloperAppsInput, AppIdInput, AppIdentifierInput, SuggestInput, ReviewsInput } from './types.js';
 import type { App, AppSummary, Review, Ratings, PrivacyDetails, Suggestion, VersionHistoryItem } from '../../schemas/index.js';
 
 type ScraperFn = (opts: Record<string, unknown>) => Promise<unknown>;
+type CacheEntry = { expiresAt: number; value: unknown };
 
 export interface AppStoreScraper {
   app: ScraperFn;
@@ -29,6 +31,10 @@ function normalizeError (error: unknown): ProviderError {
 
   const msg = error instanceof Error ? error.message : String(error);
   const code = (error as { code?: string }).code;
+
+  if (code === 'ABORT_ERR' || (error instanceof Error && error.name === 'AbortError')) {
+    return new ProviderError(ErrorCode.CANCELLED, 'Operation cancelled', false);
+  }
 
   if (code === 'ETIMEDOUT' || msg.toLowerCase().includes('timed out')) {
     return new ProviderError(ErrorCode.UPSTREAM_TIMEOUT, 'Request timed out', true);
@@ -77,103 +83,159 @@ async function callScraper<T> (
 }
 
 export class AppStoreScraperAdapter implements AppStoreProvider {
-  constructor (private readonly scraper: AppStoreScraper) {}
+  private readonly cache = new Map<string, CacheEntry>();
 
-  getApp (input: GetAppInput): Promise<App> {
-    return callScraper(
+  constructor (
+    private readonly scraper: AppStoreScraper,
+    private readonly controls?: Pick<ServerConfig, 'request' | 'cache'>
+  ) {}
+
+  private options (
+    input: Record<string, unknown>,
+    context?: ProviderCallContext
+  ): Record<string, unknown> {
+    if (this.controls === undefined) return input;
+    return {
+      ...input,
+      requestOptions: {
+        timeout: this.controls.request.timeoutMs,
+        retries: this.controls.request.retries,
+        retryDelay: this.controls.request.retryDelayMs,
+        maxRetryDelay: this.controls.request.maxRetryDelayMs,
+        ...(context?.signal !== undefined && { signal: context.signal })
+      },
+      throttle: this.controls.request.throttleRps
+    };
+  }
+
+  private async cached<T> (
+    operation: string,
+    input: Record<string, unknown>,
+    context: ProviderCallContext | undefined,
+    load: (opts: Record<string, unknown>) => Promise<T>
+  ): Promise<T> {
+    if (context?.signal?.aborted) {
+      throw new ProviderError(ErrorCode.CANCELLED, 'Operation cancelled', false);
+    }
+    const cache = this.controls?.cache;
+    if (cache === undefined || cache.ttlMs === 0 || cache.maxEntries === 0) {
+      return load(this.options(input, context));
+    }
+
+    const key = `${operation}:${JSON.stringify(input)}`;
+    const existing = this.cache.get(key);
+    if (existing !== undefined && existing.expiresAt > Date.now()) {
+      return existing.value as T;
+    }
+    if (existing !== undefined) this.cache.delete(key);
+
+    const value = await load(this.options(input, context));
+    while (this.cache.size >= cache.maxEntries) {
+      const oldest = this.cache.keys().next().value as string | undefined;
+      if (oldest === undefined) break;
+      this.cache.delete(oldest);
+    }
+    this.cache.set(key, { expiresAt: Date.now() + cache.ttlMs, value });
+    return value;
+  }
+
+  getApp (input: GetAppInput, context?: ProviderCallContext): Promise<App> {
+    return this.cached('getApp', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.app,
-      input as Record<string, unknown>,
+      opts,
       AppSchema
-    );
+    ));
   }
 
-  listApps (input: ListAppsInput): Promise<AppSummary[] | App[]> {
+  listApps (input: ListAppsInput, context?: ProviderCallContext): Promise<AppSummary[] | App[]> {
     if (input.fullDetail === true) {
-      return callScraper(
+      return this.cached('listApps', input as Record<string, unknown>, context, opts => callScraper(
         this.scraper.list,
-        input as Record<string, unknown>,
+        opts,
         z.array(AppSchema)
-      );
+      ));
     }
-    return callScraper(
+    return this.cached('listApps', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.list,
-      input as Record<string, unknown>,
+      opts,
       z.array(AppSummarySchema)
-    );
+    ));
   }
 
-  searchApps (input: SearchAppsInput): Promise<App[] | number[]> {
+  searchApps (input: SearchAppsInput, context?: ProviderCallContext): Promise<App[] | number[]> {
     if (input.idsOnly === true) {
-      return callScraper(
+      return this.cached('searchApps', input as Record<string, unknown>, context, opts => callScraper(
         this.scraper.search,
-        input as Record<string, unknown>,
+        opts,
         z.array(z.number())
-      );
+      ));
     }
-    return callScraper(
+    return this.cached('searchApps', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.search,
-      input as Record<string, unknown>,
+      opts,
       z.array(AppSchema)
-    );
+    ));
   }
 
-  getDeveloperApps (input: DeveloperAppsInput): Promise<App[]> {
-    return callScraper(
+  getDeveloperApps (input: DeveloperAppsInput, context?: ProviderCallContext): Promise<App[]> {
+    return this.cached('getDeveloperApps', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.developer,
-      input as Record<string, unknown>,
+      opts,
       z.array(AppSchema)
-    );
+    ));
   }
 
-  getPrivacy (input: AppIdInput): Promise<PrivacyDetails> {
-    return callScraper(
+  getPrivacy (input: AppIdInput, context?: ProviderCallContext): Promise<PrivacyDetails> {
+    return this.cached('getPrivacy', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.privacy,
-      input as Record<string, unknown>,
+      opts,
       PrivacyDetailsSchema
-    );
+    ));
   }
 
-  getSuggestions (input: SuggestInput): Promise<Suggestion[]> {
-    return callScraper(
+  getSuggestions (input: SuggestInput, context?: ProviderCallContext): Promise<Suggestion[]> {
+    return this.cached('getSuggestions', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.suggest,
-      input as Record<string, unknown>,
+      opts,
       z.array(SuggestionSchema)
-    );
+    ));
   }
 
-  getSimilarApps (input: AppIdentifierInput): Promise<App[]> {
-    return callScraper(
+  getSimilarApps (input: AppIdentifierInput, context?: ProviderCallContext): Promise<App[]> {
+    return this.cached('getSimilarApps', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.similar,
-      input as Record<string, unknown>,
+      opts,
       z.array(AppSchema)
-    );
+    ));
   }
 
-  getReviews (input: ReviewsInput): Promise<Review[]> {
-    return callScraper(
+  getReviews (input: ReviewsInput, context?: ProviderCallContext): Promise<Review[]> {
+    return this.cached('getReviews', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.reviews,
-      input as Record<string, unknown>,
+      opts,
       z.array(ReviewSchema)
-    );
+    ));
   }
 
-  getRatings (input: AppIdInput): Promise<Ratings> {
-    return callScraper(
+  getRatings (input: AppIdInput, context?: ProviderCallContext): Promise<Ratings> {
+    return this.cached('getRatings', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.ratings,
-      input as Record<string, unknown>,
+      opts,
       RatingsSchema
-    );
+    ));
   }
 
-  getVersionHistory (input: AppIdInput): Promise<VersionHistoryItem[]> {
-    return callScraper(
+  getVersionHistory (input: AppIdInput, context?: ProviderCallContext): Promise<VersionHistoryItem[]> {
+    return this.cached('getVersionHistory', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.versionHistory,
-      input as Record<string, unknown>,
+      opts,
       z.array(VersionHistoryItemSchema)
-    );
+    ));
   }
 
-  static async create (): Promise<AppStoreScraperAdapter> {
+  static async create (
+    controls?: Pick<ServerConfig, 'request' | 'cache'>
+  ): Promise<AppStoreScraperAdapter> {
     const mod = await import('app-store-scraper') as Record<string, unknown>;
     const scraper: AppStoreScraper = {
       app: mod['app'] as ScraperFn,
@@ -187,6 +249,6 @@ export class AppStoreScraperAdapter implements AppStoreProvider {
       ratings: mod['ratings'] as ScraperFn,
       versionHistory: mod['versionHistory'] as ScraperFn
     };
-    return new AppStoreScraperAdapter(scraper);
+    return new AppStoreScraperAdapter(scraper, controls);
   }
 }

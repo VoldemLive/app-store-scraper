@@ -146,6 +146,22 @@ describe('HTTP client', () => {
     });
   });
 
+  it('should abort active requests without retrying', (done) => {
+    const controller = new AbortController();
+    request({
+      url: `${baseUrl}/slow`,
+      signal: controller.signal,
+      retries: 2,
+      retryDelay: 1
+    }, (error) => {
+      assert.equal(error.name, 'AbortError');
+      assert.equal(error.code, 'ABORT_ERR');
+      assert.equal(retryAttempts['/slow'], 1);
+      done();
+    });
+    controller.abort();
+  });
+
   it('should reject non-retryable responses with HTTP context', () => {
     return common.request(`${baseUrl}/bad-request`, {}, { retries: 2, retryDelay: 1 })
       .then(assert.fail)

@@ -1,5 +1,9 @@
 import type { App, AppSummary, Review, Ratings, PrivacyDetails, Suggestion, VersionHistoryItem } from '../../schemas/index.js';
 
+export type ProviderCallContext = {
+  signal?: AbortSignal;
+};
+
 export type GetAppInput = {
   id?: number;
   appId?: string;
@@ -58,14 +62,14 @@ export type ReviewsInput = {
 };
 
 export interface AppStoreProvider {
-  getApp(input: GetAppInput): Promise<App>;
-  listApps(input: ListAppsInput): Promise<AppSummary[] | App[]>;
-  searchApps(input: SearchAppsInput): Promise<App[] | number[]>;
-  getDeveloperApps(input: DeveloperAppsInput): Promise<App[]>;
-  getPrivacy(input: AppIdInput): Promise<PrivacyDetails>;
-  getSuggestions(input: SuggestInput): Promise<Suggestion[]>;
-  getSimilarApps(input: AppIdentifierInput): Promise<App[]>;
-  getReviews(input: ReviewsInput): Promise<Review[]>;
-  getRatings(input: AppIdInput): Promise<Ratings>;
-  getVersionHistory(input: AppIdInput): Promise<VersionHistoryItem[]>;
+  getApp(input: GetAppInput, context?: ProviderCallContext): Promise<App>;
+  listApps(input: ListAppsInput, context?: ProviderCallContext): Promise<AppSummary[] | App[]>;
+  searchApps(input: SearchAppsInput, context?: ProviderCallContext): Promise<App[] | number[]>;
+  getDeveloperApps(input: DeveloperAppsInput, context?: ProviderCallContext): Promise<App[]>;
+  getPrivacy(input: AppIdInput, context?: ProviderCallContext): Promise<PrivacyDetails>;
+  getSuggestions(input: SuggestInput, context?: ProviderCallContext): Promise<Suggestion[]>;
+  getSimilarApps(input: AppIdentifierInput, context?: ProviderCallContext): Promise<App[]>;
+  getReviews(input: ReviewsInput, context?: ProviderCallContext): Promise<Review[]>;
+  getRatings(input: AppIdInput, context?: ProviderCallContext): Promise<Ratings>;
+  getVersionHistory(input: AppIdInput, context?: ProviderCallContext): Promise<VersionHistoryItem[]>;
 }

@@ -1,68 +1,61 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { AppStoreProvider } from '../../../providers/app-store/types.js';
-import { ProviderError } from '../../../errors/index.js';
+import { ErrorCode, ProviderError } from '../../../errors/index.js';
+import { responseControlShape, type ResponseControls, type ToolExecutor } from '../../../application/index.js';
 
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const;
-
 const countryInput = z.string().length(2).optional().describe('Two-letter ISO country code (default: us)');
 
-function ok (text: string, data: unknown, resultCount: number) {
+function controls (
+  responseMode?: 'compact' | 'full',
+  fields?: string[],
+  maxItems?: number
+): ResponseControls {
   return {
-    content: [{ type: 'text' as const, text }],
-    structuredContent: {
-      data,
-      meta: { provider: 'app-store', resultCount, truncated: false }
-    }
+    ...(responseMode !== undefined && { responseMode }),
+    ...(fields !== undefined && { fields }),
+    ...(maxItems !== undefined && { maxItems })
   };
 }
 
-function fail (error: unknown) {
-  const e = error instanceof ProviderError
-    ? error
-    : new ProviderError('INTERNAL_ERROR' as const, 'Unexpected server error', false);
-  return {
-    isError: true as const,
-    content: [{ type: 'text' as const, text: `Error [${e.code}]: ${e.message}` }],
-    structuredContent: { error: { code: e.code, message: e.message, retryable: e.retryable } }
-  };
+function requireIdentifier (id?: number, appId?: string): void {
+  if ((id === undefined) === (appId === undefined)) {
+    throw new ProviderError(ErrorCode.INVALID_ARGUMENT, 'Provide exactly one of id or appId', false);
+  }
 }
 
-export function registerDetailsTools (server: McpServer, provider: AppStoreProvider): void {
+export function registerDetailsTools (
+  server: McpServer,
+  provider: AppStoreProvider,
+  executeTool: ToolExecutor
+): void {
   server.tool(
     'app_store_get_reviews',
     'Retrieve user reviews for an App Store app by numeric ID or bundle identifier.',
     {
-      id: z.number().int().positive().optional()
-        .describe('Numeric iTunes app ID'),
-      appId: z.string().min(1).optional()
-        .describe('App bundle identifier (e.g. com.facebook.Facebook)'),
+      id: z.number().int().positive().optional().describe('Numeric iTunes app ID'),
+      appId: z.string().min(1).optional().describe('App bundle identifier'),
       country: countryInput,
-      page: z.number().int().min(1).max(10).optional()
-        .describe('Review page number, 1–10 (default: 1)'),
-      sort: z.enum(['mostRecent', 'mostHelpful']).optional()
-        .describe('Sort order: mostRecent (default) or mostHelpful')
+      page: z.number().int().min(1).max(10).optional().describe('Review page number, 1–10 (default: 1)'),
+      sort: z.enum(['mostRecent', 'mostHelpful']).optional().describe('Review sort order'),
+      ...responseControlShape
     },
     READ_ONLY,
-    async ({ id, appId, country, page, sort }) => {
-      if (id === undefined && appId === undefined) {
-        return fail(new ProviderError('INVALID_ARGUMENT' as const, 'Provide exactly one of id or appId', false));
-      }
-      try {
+    async ({ id, appId, country, page, sort, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_reviews', extra, controls(responseMode, fields, maxItems), async signal => {
+        requireIdentifier(id, appId);
         const results = await provider.getReviews({
           ...(id !== undefined && { id }),
           ...(appId !== undefined && { appId }),
           ...(country !== undefined && { country }),
           ...(page !== undefined && { page }),
           ...(sort !== undefined && { sort })
-        });
+        }, { signal });
         const count = results.length;
         const label = id !== undefined ? String(id) : (appId ?? '');
-        return ok(`Found ${count} review${count !== 1 ? 's' : ''} for ${label}.`, results, count);
-      } catch (error) {
-        return fail(error);
-      }
-    }
+        return { text: `Found ${count} review${count !== 1 ? 's' : ''} for ${label}.`, data: results };
+      })
   );
 
   server.tool(
@@ -70,20 +63,18 @@ export function registerDetailsTools (server: McpServer, provider: AppStoreProvi
     'Retrieve star-rating statistics for an App Store app.',
     {
       id: z.number().int().positive().describe('Numeric iTunes app ID'),
-      country: countryInput
+      country: countryInput,
+      ...responseControlShape
     },
     READ_ONLY,
-    async ({ id, country }) => {
-      try {
+    async ({ id, country, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_ratings', extra, controls(responseMode, fields, maxItems), async signal => {
         const result = await provider.getRatings({
           id,
           ...(country !== undefined && { country })
-        });
-        return ok(`Ratings for app ${id}: ${result.ratings} rating(s).`, result, 1);
-      } catch (error) {
-        return fail(error);
-      }
-    }
+        }, { signal });
+        return { text: `Ratings for app ${id}: ${result.ratings} rating(s).`, data: result };
+      })
   );
 
   server.tool(
@@ -91,21 +82,19 @@ export function registerDetailsTools (server: McpServer, provider: AppStoreProvi
     'Retrieve App Store privacy disclosure data for an app.',
     {
       id: z.number().int().positive().describe('Numeric iTunes app ID'),
-      country: countryInput
+      country: countryInput,
+      ...responseControlShape
     },
     READ_ONLY,
-    async ({ id, country }) => {
-      try {
+    async ({ id, country, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_privacy', extra, controls(responseMode, fields, maxItems), async signal => {
         const result = await provider.getPrivacy({
           id,
           ...(country !== undefined && { country })
-        });
+        }, { signal });
         const count = result.privacyTypes.length;
-        return ok(`Found ${count} privacy type${count !== 1 ? 's' : ''} for app ${id}.`, result, count);
-      } catch (error) {
-        return fail(error);
-      }
-    }
+        return { text: `Found ${count} privacy type${count !== 1 ? 's' : ''} for app ${id}.`, data: result, resultCount: count };
+      })
   );
 
   server.tool(
@@ -113,20 +102,18 @@ export function registerDetailsTools (server: McpServer, provider: AppStoreProvi
     'Retrieve the version history for an App Store app.',
     {
       id: z.number().int().positive().describe('Numeric iTunes app ID'),
-      country: countryInput
+      country: countryInput,
+      ...responseControlShape
     },
     READ_ONLY,
-    async ({ id, country }) => {
-      try {
+    async ({ id, country, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_version_history', extra, controls(responseMode, fields, maxItems), async signal => {
         const results = await provider.getVersionHistory({
           id,
           ...(country !== undefined && { country })
-        });
+        }, { signal });
         const count = results.length;
-        return ok(`Found ${count} version${count !== 1 ? 's' : ''} for app ${id}.`, results, count);
-      } catch (error) {
-        return fail(error);
-      }
-    }
+        return { text: `Found ${count} version${count !== 1 ? 's' : ''} for app ${id}.`, data: results };
+      })
   );
 }

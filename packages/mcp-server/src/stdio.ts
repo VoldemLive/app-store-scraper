@@ -20,7 +20,7 @@ export async function startStdioServer (
 ): Promise<StdioServerRuntime> {
   const config = loadConfig(options.env);
 
-  const appStore = options.providers?.appStore ?? await AppStoreScraperAdapter.create();
+  const appStore = options.providers?.appStore ?? await AppStoreScraperAdapter.create(config);
   const providers: ToolProviders = { appStore, ...options.providers };
 
   const server = createMcpServer(config, providers);

@@ -3,6 +3,7 @@ import test from 'node:test';
 import { AppStoreScraperAdapter, type AppStoreScraper } from '../../../src/providers/app-store/index.js';
 import { ProviderError, ErrorCode } from '../../../src/errors/index.js';
 import type { App, AppSummary, Review, Ratings, PrivacyDetails, Suggestion, VersionHistoryItem } from '../../../src/schemas/index.js';
+import { loadConfig } from '../../../src/config.js';
 
 const validApp: App = {
   id: 1234,
@@ -291,6 +292,66 @@ test('getVersionHistory maps upstream-format error to UPSTREAM_CHANGED', async (
     () => adapter.getVersionHistory({ id: 1234 }),
     (e: unknown) => e instanceof ProviderError && e.code === ErrorCode.UPSTREAM_CHANGED && !e.retryable
   );
+});
+
+test('applies configured network policy and shares cached results', async () => {
+  const config = loadConfig({
+    MCP_REQUEST_TIMEOUT_MS: '1500',
+    MCP_REQUEST_RETRIES: '1',
+    MCP_REQUEST_RETRY_DELAY_MS: '50',
+    MCP_REQUEST_MAX_RETRY_DELAY_MS: '500',
+    MCP_REQUEST_THROTTLE_RPS: '4',
+    MCP_CACHE_TTL_MS: '60000',
+    MCP_CACHE_MAX_ENTRIES: '10'
+  });
+  const controller = new AbortController();
+  let calls = 0;
+  let received: Record<string, unknown> | undefined;
+  const adapter = new AppStoreScraperAdapter(
+    makeScraper({
+      app: opts => {
+        calls++;
+        received = opts;
+        return Promise.resolve(validApp);
+      }
+    }),
+    config
+  );
+
+  await adapter.getApp({ id: 1234 }, { signal: controller.signal });
+  await adapter.getApp({ id: 1234 }, { signal: controller.signal });
+
+  assert.equal(calls, 1);
+  assert.equal(received?.['throttle'], 4);
+  assert.deepEqual(received?.['requestOptions'], {
+    timeout: 1500,
+    retries: 1,
+    retryDelay: 50,
+    maxRetryDelay: 500,
+    signal: controller.signal
+  });
+});
+
+test('returns CANCELLED before calling scraper for an aborted operation', async () => {
+  const config = loadConfig({});
+  const controller = new AbortController();
+  controller.abort();
+  let called = false;
+  const adapter = new AppStoreScraperAdapter(
+    makeScraper({
+      app: () => {
+        called = true;
+        return Promise.resolve(validApp);
+      }
+    }),
+    config
+  );
+
+  await assert.rejects(
+    () => adapter.getApp({ id: 1234 }, { signal: controller.signal }),
+    (e: unknown) => e instanceof ProviderError && e.code === ErrorCode.CANCELLED
+  );
+  assert.equal(called, false);
 });
 
 test('normalizes ETIMEDOUT code on network errors', async () => {
