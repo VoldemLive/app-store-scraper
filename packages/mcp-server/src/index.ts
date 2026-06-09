@@ -11,6 +11,7 @@ export * from './schemas/index.js';
 export {
   AppStoreScraperAdapter,
   UnsupportedAppleAdsProvider,
+  type ProviderCallContext,
   type AppStoreScraper,
   type AppStoreProvider,
   type AppleAdsProvider,

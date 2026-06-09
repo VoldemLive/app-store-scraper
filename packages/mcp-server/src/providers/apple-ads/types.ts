@@ -7,6 +7,7 @@ import type {
   AppleAdsPromotedApp,
   AppleAdsReportRow
 } from '../../schemas/index.js';
+import type { ProviderCallContext } from '../types.js';
 
 export type AppleAdsCapabilities = {
   organizations: boolean;
@@ -29,11 +30,11 @@ export type AppleAdsReportInput = AppleAdsOrganizationInput & {
 
 export interface AppleAdsProvider {
   capabilities(): AppleAdsCapabilities;
-  listOrganizations(): Promise<AppleAdsOrganization[]>;
-  listPromotedApps(input: AppleAdsOrganizationInput): Promise<AppleAdsPromotedApp[]>;
-  listCampaigns(input: AppleAdsOrganizationInput): Promise<AppleAdsCampaign[]>;
-  listAdGroups(input: AppleAdsCampaignInput): Promise<AppleAdsAdGroup[]>;
-  listKeywords(input: AppleAdsAdGroupInput): Promise<AppleAdsKeyword[]>;
-  listCreatives(input: AppleAdsOrganizationInput): Promise<AppleAdsCreative[]>;
-  getReport(input: AppleAdsReportInput): Promise<AppleAdsReportRow[]>;
+  listOrganizations(context?: ProviderCallContext): Promise<AppleAdsOrganization[]>;
+  listPromotedApps(input: AppleAdsOrganizationInput, context?: ProviderCallContext): Promise<AppleAdsPromotedApp[]>;
+  listCampaigns(input: AppleAdsOrganizationInput, context?: ProviderCallContext): Promise<AppleAdsCampaign[]>;
+  listAdGroups(input: AppleAdsCampaignInput, context?: ProviderCallContext): Promise<AppleAdsAdGroup[]>;
+  listKeywords(input: AppleAdsAdGroupInput, context?: ProviderCallContext): Promise<AppleAdsKeyword[]>;
+  listCreatives(input: AppleAdsOrganizationInput, context?: ProviderCallContext): Promise<AppleAdsCreative[]>;
+  getReport(input: AppleAdsReportInput, context?: ProviderCallContext): Promise<AppleAdsReportRow[]>;
 }

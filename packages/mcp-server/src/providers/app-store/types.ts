@@ -1,8 +1,6 @@
 import type { App, AppSummary, Review, Ratings, PrivacyDetails, Suggestion, VersionHistoryItem } from '../../schemas/index.js';
-
-export type ProviderCallContext = {
-  signal?: AbortSignal;
-};
+import type { ProviderCallContext } from '../types.js';
+export type { ProviderCallContext } from '../types.js';
 
 export type GetAppInput = {
   id?: number;

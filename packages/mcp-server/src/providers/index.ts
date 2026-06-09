@@ -1,4 +1,5 @@
 export { AppStoreScraperAdapter, type AppStoreScraper, type AppStoreProvider } from './app-store/index.js';
+export type { ProviderCallContext } from './types.js';
 export {
   UnsupportedAppleAdsProvider,
   type AppleAdsProvider,
