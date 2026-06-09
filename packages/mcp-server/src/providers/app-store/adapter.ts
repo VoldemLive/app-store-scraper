@@ -52,7 +52,7 @@ function normalizeError (error: unknown): ProviderError {
     return new ProviderError(ErrorCode.NOT_FOUND, msg, false);
   }
 
-  if (/required|must be|invalid|cannot retrieve|more than|missing/i.test(msg)) {
+  if (/required|must be|invalid|unsupported|cannot retrieve|more than|missing/i.test(msg)) {
     return new ProviderError(ErrorCode.INVALID_ARGUMENT, msg, false);
   }
 

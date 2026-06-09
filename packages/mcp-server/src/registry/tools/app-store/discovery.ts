@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { collection as collectionConst, category as categoryConst } from 'app-store-scraper';
+import { collection as collectionConst, category as categoryConst, markets } from 'app-store-scraper';
 import type { AppStoreProvider } from '../../../providers/app-store/types.js';
 import { ErrorCode, ProviderError } from '../../../errors/index.js';
 import { responseControlShape, type ResponseControls, type ToolExecutor } from '../../../application/index.js';
@@ -9,8 +9,13 @@ const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const;
 
 const validCollections = new Set(Object.values(collectionConst));
 const validCategories = new Set(Object.values(categoryConst));
+const supportedCountries = new Set(Object.keys(markets));
 
-const countryInput = z.string().length(2).optional().describe('Two-letter ISO country code (default: us)');
+const countryInput = z.string().length(2)
+  .refine(country => supportedCountries.has(country.toUpperCase()), 'Unsupported App Store country code')
+  .transform(country => country.toLowerCase())
+  .optional()
+  .describe('Supported two-letter App Store country code (default: us; see app-store://reference/markets)');
 const langInput = z.string().optional().describe('Language code for localised fields (default: en-us)');
 
 function controls (

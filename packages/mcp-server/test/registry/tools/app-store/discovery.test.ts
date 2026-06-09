@@ -181,6 +181,29 @@ test('app_store_search_apps: returns error for num above 200', async () => {
   assert.equal(result.isError, true);
 });
 
+test('app_store_search_apps: normalizes supported countries and rejects unsupported storefronts', async () => {
+  let receivedCountry: string | undefined;
+  const { client } = await startTestServer(makeProvider({
+    searchApps: input => {
+      receivedCountry = input.country;
+      return Promise.resolve([baseApp]);
+    }
+  }));
+  const valid = asResult(await client.callTool({
+    name: 'app_store_search_apps',
+    arguments: { term: 'facebook', country: 'FR' }
+  }));
+  const invalid = asResult(await client.callTool({
+    name: 'app_store_search_apps',
+    arguments: { term: 'facebook', country: 'ZZ' }
+  }));
+
+  assert.equal(valid.isError, undefined);
+  assert.equal(receivedCountry, 'fr');
+  assert.equal(invalid.isError, true);
+  assert.ok((invalid.content[0]?.text ?? '').includes('Unsupported App Store country code'));
+});
+
 // --- app_store_list_apps ---
 
 test('app_store_list_apps: returns chart summaries', async () => {

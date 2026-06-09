@@ -176,6 +176,16 @@ test('app_store_get_ratings: propagates NOT_FOUND from provider', async () => {
   assert.ok((result.content[0]?.text ?? '').includes('NOT_FOUND'));
 });
 
+test('app_store_get_ratings: rejects unsupported storefronts', async () => {
+  const { client } = await startTestServer(makeProvider());
+  const result = asResult(await client.callTool({
+    name: 'app_store_get_ratings',
+    arguments: { id: 284882218, country: 'ZZ' }
+  }));
+  assert.equal(result.isError, true);
+  assert.ok((result.content[0]?.text ?? '').includes('Unsupported App Store country code'));
+});
+
 // --- app_store_get_privacy ---
 
 test('app_store_get_privacy: returns privacy details', async () => {

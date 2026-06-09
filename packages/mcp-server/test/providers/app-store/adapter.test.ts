@@ -199,6 +199,17 @@ test('searchApps maps validation error to INVALID_ARGUMENT', async () => {
   );
 });
 
+test('searchApps maps unsupported country errors to INVALID_ARGUMENT', async () => {
+  const adapter = new AppStoreScraperAdapter(makeScraper({
+    search: () => Promise.reject(new Error('Unsupported country code zz'))
+  }));
+
+  await assert.rejects(
+    adapter.searchApps({ term: 'calendar', country: 'zz' }),
+    (error: ProviderError) => error.code === ErrorCode.INVALID_ARGUMENT
+  );
+});
+
 test('getDeveloperApps delegates and parses result', async () => {
   const adapter = new AppStoreScraperAdapter(
     makeScraper({ developer: () => Promise.resolve([validApp]) })
