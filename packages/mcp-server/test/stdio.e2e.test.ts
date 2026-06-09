@@ -114,6 +114,40 @@ test('lists all 4 detail tools via stdio', async () => {
   }
 });
 
+test('lists all 5 reference resources via stdio', async () => {
+  const client = new Client({ name: 'resource-e2e', version: '1.0.0' });
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [cli],
+    cwd: process.cwd(),
+    env: { MCP_LOG_LEVEL: 'error' },
+    stderr: 'pipe'
+  });
+
+  try {
+    await client.connect(transport);
+    const { resources } = await client.listResources();
+    const uris = resources.map(r => r.uri);
+    const expected = [
+      'app-store://reference/collections',
+      'app-store://reference/categories',
+      'app-store://reference/sort',
+      'app-store://reference/devices',
+      'app-store://reference/markets'
+    ];
+    for (const uri of expected) {
+      assert.ok(uris.includes(uri), `Missing resource: ${uri}`);
+    }
+    const result = await client.readResource({ uri: 'app-store://reference/sort' });
+    const content = result.contents[0];
+    assert.ok(content !== undefined);
+    const data = JSON.parse('text' in content ? (content.text ?? '') : '{}') as Record<string, string>;
+    assert.equal(data['RECENT'], 'mostRecent');
+  } finally {
+    await client.close();
+  }
+});
+
 test('closes gracefully on SIGTERM without writing to stdout', async () => {
   const child = spawn(process.execPath, [cli], {
     env: {
