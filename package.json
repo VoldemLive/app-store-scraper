@@ -10,7 +10,9 @@
   },
   "scripts": {
     "test": "mocha --timeout 8000",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check:secrets": "node scripts/check-secrets.js",
+    "prepack": "npm run check:secrets"
   },
   "repository": {
     "type": "git",

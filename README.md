@@ -11,6 +11,13 @@ npm install app-store-scraper
 This package requires Node.js 16 or newer and is published as an ES module.
 CommonJS `require()` is not supported.
 
+## Security
+
+Run `npm run check:secrets` before committing. Apple Ads and other credentials
+must be stored outside the repository and supplied at runtime. See
+[Apple Ads credential security](docs/security/apple-ads-credentials.md) for
+configuration, verification, rotation, and incident-response guidance.
+
 ## Usage
 Available methods:
 - [app](#app): Retrieves the full detail of an application.
