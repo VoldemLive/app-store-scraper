@@ -4,3 +4,19 @@ export { RatingsSchema, type Ratings } from './ratings.js';
 export { PrivacyDetailsSchema, type PrivacyDetails } from './privacy.js';
 export { SuggestionSchema, type Suggestion } from './suggest.js';
 export { VersionHistoryItemSchema, type VersionHistoryItem } from './version-history.js';
+export {
+  AppleAdsOrganizationSchema,
+  AppleAdsPromotedAppSchema,
+  AppleAdsCampaignSchema,
+  AppleAdsAdGroupSchema,
+  AppleAdsKeywordSchema,
+  AppleAdsCreativeSchema,
+  AppleAdsReportRowSchema,
+  type AppleAdsOrganization,
+  type AppleAdsPromotedApp,
+  type AppleAdsCampaign,
+  type AppleAdsAdGroup,
+  type AppleAdsKeyword,
+  type AppleAdsCreative,
+  type AppleAdsReportRow
+} from './apple-ads.js';
