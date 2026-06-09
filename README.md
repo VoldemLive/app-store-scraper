@@ -18,6 +18,13 @@ must be stored outside the repository and supplied at runtime. See
 [Apple Ads credential security](docs/security/apple-ads-credentials.md) for
 configuration, verification, rotation, and incident-response guidance.
 
+## MCP server
+
+An extensible MCP server is planned around the scraper's public API. The
+[MCP server architecture](docs/architecture/mcp-server.md) defines the stable
+tool and resource contracts, provider boundaries, security model, and delivery
+sequence for stdio, OCR, Apple Ads, and future transports.
+
 ## Usage
 Available methods:
 - [app](#app): Retrieves the full detail of an application.
