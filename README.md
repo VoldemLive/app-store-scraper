@@ -20,6 +20,10 @@ npm run setup
 
 The scraper is an ES module. CommonJS `require()` is not supported.
 
+Methods with a `country` option support the App Store storefronts exported by
+`store.markets`. Country codes are case-insensitive, default to `us` when
+omitted, and are rejected when the storefront is unsupported.
+
 ## Project commands
 
 | Command | Purpose |
