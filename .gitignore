@@ -26,3 +26,21 @@ build/Release
 # Dependency directory
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
 node_modules
+
+# Local operating system files
+.DS_Store
+
+# Local environment and credential files
+.env
+.env.*
+!.env.example
+
+*.key
+*.p8
+*.p12
+*.pem
+!*.example.pem
+
+apple_ads_private_key.*
+apple_ads_public_key.*
+apple_ads_credentials.*
