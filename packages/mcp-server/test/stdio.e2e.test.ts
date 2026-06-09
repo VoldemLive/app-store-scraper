@@ -1,0 +1,83 @@
+import assert from 'node:assert/strict';
+import { spawn, spawnSync } from 'node:child_process';
+import { once } from 'node:events';
+import { resolve } from 'node:path';
+import test from 'node:test';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+
+const cli = resolve('dist/src/cli.js');
+
+test('completes an MCP handshake and ping over stdio without stdout noise', async () => {
+  const client = new Client({
+    name: 'mcp-server-e2e-test',
+    version: '1.0.0'
+  });
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [cli],
+    cwd: process.cwd(),
+    env: {
+      MCP_SERVER_NAME: 'stdio-e2e-server',
+      MCP_SERVER_VERSION: '9.8.7',
+      MCP_LOG_LEVEL: 'error'
+    },
+    stderr: 'pipe'
+  });
+  let stderr = '';
+  transport.stderr?.on('data', chunk => {
+    stderr += chunk.toString();
+  });
+
+  try {
+    await client.connect(transport);
+    await client.ping();
+
+    assert.deepEqual(client.getServerVersion(), {
+      name: 'stdio-e2e-server',
+      version: '9.8.7'
+    });
+    assert.equal(stderr, '');
+  } finally {
+    await client.close();
+  }
+});
+
+test('reports startup failure only on stderr', () => {
+  const result = spawnSync(process.execPath, [cli], {
+    encoding: 'utf8',
+    env: {
+      MCP_LOG_LEVEL: 'invalid'
+    }
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'MCP server startup failed.\n');
+});
+
+test('closes gracefully on SIGTERM without writing to stdout', async () => {
+  const child = spawn(process.execPath, [cli], {
+    env: {
+      MCP_LOG_LEVEL: 'error'
+    },
+    stdio: ['pipe', 'pipe', 'pipe']
+  });
+  let stdout = '';
+  let stderr = '';
+  child.stdout.on('data', chunk => {
+    stdout += chunk.toString();
+  });
+  child.stderr.on('data', chunk => {
+    stderr += chunk.toString();
+  });
+
+  await new Promise(resolveDelay => setTimeout(resolveDelay, 200));
+  child.kill('SIGTERM');
+  const [code, signal] = await once(child, 'exit');
+
+  assert.equal(code, 0);
+  assert.equal(signal, null);
+  assert.equal(stdout, '');
+  assert.equal(stderr, 'MCP server shutting down after SIGTERM.\n');
+});
