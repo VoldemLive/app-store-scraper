@@ -86,6 +86,34 @@ test('lists all 6 discovery tools via stdio', async () => {
   }
 });
 
+test('lists all 4 detail tools via stdio', async () => {
+  const client = new Client({ name: 'tool-detail-e2e', version: '1.0.0' });
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [cli],
+    cwd: process.cwd(),
+    env: { MCP_LOG_LEVEL: 'error' },
+    stderr: 'pipe'
+  });
+
+  try {
+    await client.connect(transport);
+    const { tools } = await client.listTools();
+    const names = tools.map((t) => t.name);
+    const expected = [
+      'app_store_get_reviews',
+      'app_store_get_ratings',
+      'app_store_get_privacy',
+      'app_store_get_version_history'
+    ];
+    for (const name of expected) {
+      assert.ok(names.includes(name), `Missing tool: ${name}`);
+    }
+  } finally {
+    await client.close();
+  }
+});
+
 test('closes gracefully on SIGTERM without writing to stdout', async () => {
   const child = spawn(process.execPath, [cli], {
     env: {
