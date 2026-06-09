@@ -29,7 +29,6 @@
     "debug": "^2.2.0",
     "memoizee": "^0.4.15",
     "ramda": "^0.29.0",
-    "request": "^2.87.0",
     "throttled-request": "^0.1.1",
     "xml2js": "^0.6.2"
   },
