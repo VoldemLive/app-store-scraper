@@ -499,3 +499,6 @@ By default up to 1000 values are cached by each method and they expire after 5 m
 Scraper methods accept a `requestOptions` object for advanced HTTP configuration.
 The options are passed to Node.js [`http.request`](https://nodejs.org/api/http.html#httprequestoptions-callback).
 Options specific to the deprecated `request` package are no longer supported.
+
+Requests time out after 10 seconds and retry transient GET failures up to two times by default.
+Use `timeout`, `retries`, `retryDelay`, and `maxRetryDelay` in `requestOptions` to override these defaults.
