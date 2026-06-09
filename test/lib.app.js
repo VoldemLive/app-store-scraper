@@ -47,8 +47,12 @@ describe('App method', () => {
           assertValidUrl(app.developerWebsite);
         }
 
-        assert(app.screenshots.length);
-        app.screenshots.map(assertValidUrl);
+        const screenshots = []
+          .concat(app.screenshots || [])
+          .concat(app.ipadScreenshots || [])
+          .concat(app.appletvScreenshots || []);
+        assert(screenshots.length);
+        screenshots.map(assertValidUrl);
 
         assert.isString(app.releaseNotes);
       });
