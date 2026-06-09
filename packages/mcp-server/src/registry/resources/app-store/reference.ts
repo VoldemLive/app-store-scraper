@@ -27,7 +27,7 @@ export function registerReferenceResources (server: McpServer): void {
       description: 'App Store chart collection identifiers for use with app_store_list_apps',
       mimeType: MIME
     },
-    (_uri) => ({
+    () => ({
       contents: [{ uri: URI.collections, mimeType: MIME, text: PAYLOAD.collections }]
     })
   );
@@ -39,7 +39,7 @@ export function registerReferenceResources (server: McpServer): void {
       description: 'App Store category numeric IDs for use with app_store_list_apps',
       mimeType: MIME
     },
-    (_uri) => ({
+    () => ({
       contents: [{ uri: URI.categories, mimeType: MIME, text: PAYLOAD.categories }]
     })
   );
@@ -51,7 +51,7 @@ export function registerReferenceResources (server: McpServer): void {
       description: 'Review sort order values for use with app_store_get_reviews',
       mimeType: MIME
     },
-    (_uri) => ({
+    () => ({
       contents: [{ uri: URI.sort, mimeType: MIME, text: PAYLOAD.sort }]
     })
   );
@@ -63,7 +63,7 @@ export function registerReferenceResources (server: McpServer): void {
       description: 'App Store device type identifiers',
       mimeType: MIME
     },
-    (_uri) => ({
+    () => ({
       contents: [{ uri: URI.devices, mimeType: MIME, text: PAYLOAD.devices }]
     })
   );
@@ -75,7 +75,7 @@ export function registerReferenceResources (server: McpServer): void {
       description: 'Apple App Store storefront IDs by country code',
       mimeType: MIME
     },
-    (_uri) => ({
+    () => ({
       contents: [{ uri: URI.markets, mimeType: MIME, text: PAYLOAD.markets }]
     })
   );
