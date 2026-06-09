@@ -28,9 +28,8 @@ Run the repository scanner before committing:
 npm run check:secrets
 ```
 
-CI runs the same current-tree scan and Gitleaks against Git history. Packaging
-also runs the current-tree scan before creating an npm artifact. Synthetic test
-values verify scanner behavior without storing valid credentials.
+CI runs the same current-tree scan and Gitleaks against Git history. Synthetic
+test values verify scanner behavior without storing valid credentials.
 
 ## Suspected exposure
 
