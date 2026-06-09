@@ -11,4 +11,10 @@ declare module 'app-store-scraper' {
   export const reviews: ScraperFn;
   export const ratings: ScraperFn;
   export const versionHistory: ScraperFn;
+
+  export const collection: Record<string, string>;
+  export const category: Record<string, number>;
+  export const device: Record<string, string>;
+  export const sort: Record<string, string>;
+  export const markets: Record<string, number>;
 }
