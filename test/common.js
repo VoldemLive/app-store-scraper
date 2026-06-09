@@ -1,7 +1,5 @@
-'use strict';
-
-const assert = require('chai').assert;
-const validator = require('validator');
+import { assert } from 'chai';
+import validator from 'validator';
 
 function assertValidUrl (url) {
   return assert(validator.isURL(url, { allow_protocol_relative_urls: true }),
@@ -27,4 +25,4 @@ function assertValidApp (app) {
   return app;
 }
 
-module.exports = { assertValidUrl, assertValidApp };
+export { assertValidUrl, assertValidApp };

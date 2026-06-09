@@ -2,7 +2,12 @@
   "name": "app-store-scraper",
   "version": "0.18.0",
   "description": "scrape data from the itunes app store",
+  "type": "module",
   "main": "index.js",
+  "exports": "./index.js",
+  "engines": {
+    "node": ">=16"
+  },
   "scripts": {
     "test": "mocha --timeout 8000",
     "lint": "eslint ."

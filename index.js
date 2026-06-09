@@ -1,23 +1,31 @@
-'use strict';
-
-const R = require('ramda');
-const memoizee = require('memoizee');
-const constants = require('./lib/constants');
+import * as R from 'ramda';
+import memoizee from 'memoizee';
+import app from './lib/app.js';
+import list from './lib/list.js';
+import search from './lib/search.js';
+import developer from './lib/developer.js';
+import privacy from './lib/privacy.js';
+import suggest from './lib/suggest.js';
+import similar from './lib/similar.js';
+import reviews from './lib/reviews.js';
+import ratings from './lib/ratings.js';
+import versionHistory from './lib/version-history.js';
+import constants, { category, collection, device, markets, sort } from './lib/constants.js';
 
 const methods = {
-  app: require('./lib/app'),
-  list: require('./lib/list'),
-  search: require('./lib/search'),
-  developer: require('./lib/developer'),
-  privacy: require('./lib/privacy'),
-  suggest: require('./lib/suggest'),
-  similar: require('./lib/similar'),
-  reviews: require('./lib/reviews'),
-  ratings: require('./lib/ratings'),
-  versionHistory: require('./lib/version-history')
+  app,
+  list,
+  search,
+  developer,
+  privacy,
+  suggest,
+  similar,
+  reviews,
+  ratings,
+  versionHistory
 };
 
-function memoized (opts) {
+export function memoized (opts) {
   const cacheOpts = Object.assign({
     primitive: true,
     normalizer: JSON.stringify,
@@ -28,4 +36,24 @@ function memoized (opts) {
   return Object.assign({}, constants, R.map(doMemoize, methods));
 }
 
-module.exports = Object.assign({memoized}, constants, methods);
+const store = Object.assign({memoized}, constants, methods);
+
+export {
+  app,
+  category,
+  collection,
+  developer,
+  device,
+  list,
+  markets,
+  privacy,
+  ratings,
+  reviews,
+  search,
+  similar,
+  sort,
+  suggest,
+  versionHistory
+};
+
+export default store;

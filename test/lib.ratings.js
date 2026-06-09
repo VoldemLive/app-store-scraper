@@ -1,7 +1,5 @@
-'use strict';
-
-const assert = require('chai').assert;
-const store = require('../index');
+import { assert } from 'chai';
+import store from '../index.js';
 
 const id = '553834731';
 
