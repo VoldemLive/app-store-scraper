@@ -66,7 +66,7 @@ export function registerDetailsTools (
 
   server.tool(
     'app_store_get_ratings',
-    'Retrieve star-rating statistics for an App Store app.',
+    'Retrieve country-specific star-rating statistics for an App Store app.',
     {
       id: z.number().int().positive().describe('Numeric iTunes app ID'),
       country: countryInput,
