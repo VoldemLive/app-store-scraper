@@ -21,9 +21,6 @@ jobs:
       - run: npm test
   mcp-server:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/mcp-server
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js 20.x
@@ -35,4 +32,5 @@ jobs:
             package-lock.json
             packages/mcp-server/package-lock.json
       - run: npm ci
-      - run: npm run check
+      - run: npm --prefix packages/mcp-server ci
+      - run: npm --prefix packages/mcp-server run check
