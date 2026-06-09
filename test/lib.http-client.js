@@ -158,4 +158,23 @@ describe('HTTP client', () => {
         assert.equal(retryAttempts['/bad-request'], 1);
       });
   });
+
+  it('should isolate concurrent throttle configurations', () => {
+    const startedAt = Date.now();
+    const saturated = Array.from({ length: 11 }, () => (
+      common.request(`${baseUrl}/response`, {}, {}, 10)
+    ));
+    const independent = common.request(`${baseUrl}/response`, {}, {}, 1)
+      .then(() => assert.isBelow(Date.now() - startedAt, 500));
+
+    return Promise.all(saturated.concat(independent));
+  });
+
+  it('should reject invalid throttle values', () => {
+    return Promise.all([0, -1, 1.5].map((throttle) => (
+      common.request(`${baseUrl}/response`, {}, {}, throttle)
+        .then(assert.fail)
+        .catch((error) => assert.equal(error.message, 'throttle must be a positive integer'))
+    )));
+  });
 });

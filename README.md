@@ -502,3 +502,6 @@ Options specific to the deprecated `request` package are no longer supported.
 
 Requests time out after 10 seconds and retry transient GET failures up to two times by default.
 Use `timeout`, `retries`, `retryDelay`, and `maxRetryDelay` in `requestOptions` to override these defaults.
+
+Methods that perform lookup requests also accept a positive integer `throttle` option.
+Calls with the same value share a requests-per-second queue; different values use isolated queues.
