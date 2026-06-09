@@ -39,7 +39,7 @@ export const AppSchema = z.object({
 export type App = z.infer<typeof AppSchema>;
 
 export const AppSummarySchema = z.object({
-  id: z.string(),
+  id: z.number(),
   appId: z.string(),
   title: z.string(),
   icon: z.string(),
@@ -50,9 +50,9 @@ export const AppSummarySchema = z.object({
   description: z.string().optional(),
   developer: z.string(),
   developerUrl: z.string().optional(),
-  developerId: z.string().optional(),
+  developerId: z.number().optional(),
   genre: z.string(),
-  genreId: z.string(),
+  genreId: z.number(),
   released: z.string()
 });
 

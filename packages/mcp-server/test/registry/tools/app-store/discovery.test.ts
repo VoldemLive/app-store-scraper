@@ -37,7 +37,7 @@ const baseApp: App = {
 };
 
 const baseSummary: AppSummary = {
-  id: '284882218',
+  id: 284882218,
   appId: 'com.facebook.Facebook',
   title: 'Facebook',
   icon: 'https://example.com/icon.png',
@@ -46,7 +46,7 @@ const baseSummary: AppSummary = {
   free: true,
   developer: 'Meta Platforms, Inc.',
   genre: 'Social Networking',
-  genreId: '6005',
+  genreId: 6005,
   released: '2008-08-01'
 };
 

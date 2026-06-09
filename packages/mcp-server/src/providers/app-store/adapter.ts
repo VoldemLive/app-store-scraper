@@ -12,6 +12,12 @@ import type { App, AppSummary, Review, Ratings, PrivacyDetails, Suggestion, Vers
 
 type ScraperFn = (opts: Record<string, unknown>) => Promise<unknown>;
 type CacheEntry = { expiresAt: number; value: unknown };
+type Normalizer = (raw: unknown) => unknown;
+
+const APP_NUMBER_FIELDS = [
+  'id', 'primaryGenreId', 'price', 'developerId', 'score', 'reviews',
+  'currentVersionScore', 'currentVersionReviews'
+];
 
 export interface AppStoreScraper {
   app: ScraperFn;
@@ -59,10 +65,32 @@ function normalizeError (error: unknown): ProviderError {
   return new ProviderError(ErrorCode.INTERNAL_ERROR, 'Unexpected provider failure', false);
 }
 
+function normalizeNumber (value: unknown): unknown {
+  return typeof value === 'string' && value.trim() !== '' ? Number(value) : value;
+}
+
+function normalizeNumberFields (value: unknown, fields: string[]): unknown {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return value;
+
+  const normalized = { ...(value as Record<string, unknown>) };
+  fields.forEach(field => {
+    if (Object.hasOwn(normalized, field)) normalized[field] = normalizeNumber(normalized[field]);
+  });
+  return normalized;
+}
+
+const normalizeApp = (value: unknown) => normalizeNumberFields(value, APP_NUMBER_FIELDS);
+const normalizeSummary = (value: unknown) => normalizeNumberFields(value, ['id', 'price', 'developerId', 'genreId']);
+const normalizeArray = (normalizeItem: Normalizer): Normalizer => raw => (
+  Array.isArray(raw) ? raw.map(normalizeItem) : raw
+);
+const normalizeAppIds = normalizeArray(normalizeNumber);
+
 async function callScraper<T> (
   fn: ScraperFn,
   opts: Record<string, unknown>,
-  schema: z.ZodType<T>
+  schema: z.ZodType<T>,
+  normalize: Normalizer = raw => raw
 ): Promise<T> {
   let raw: unknown;
   try {
@@ -71,7 +99,7 @@ async function callScraper<T> (
     throw normalizeError(error);
   }
 
-  const parsed = schema.safeParse(raw);
+  const parsed = schema.safeParse(normalize(raw));
   if (!parsed.success) {
     throw new ProviderError(
       ErrorCode.UPSTREAM_CHANGED,
@@ -143,7 +171,8 @@ export class AppStoreScraperAdapter implements AppStoreProvider {
     return this.cached('getApp', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.app,
       opts,
-      AppSchema
+      AppSchema,
+      normalizeApp
     ));
   }
 
@@ -152,13 +181,15 @@ export class AppStoreScraperAdapter implements AppStoreProvider {
       return this.cached('listApps', input as Record<string, unknown>, context, opts => callScraper(
         this.scraper.list,
         opts,
-        z.array(AppSchema)
+        z.array(AppSchema),
+        normalizeArray(normalizeApp)
       ));
     }
     return this.cached('listApps', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.list,
       opts,
-      z.array(AppSummarySchema)
+      z.array(AppSummarySchema),
+      normalizeArray(normalizeSummary)
     ));
   }
 
@@ -167,13 +198,15 @@ export class AppStoreScraperAdapter implements AppStoreProvider {
       return this.cached('searchApps', input as Record<string, unknown>, context, opts => callScraper(
         this.scraper.search,
         opts,
-        z.array(z.number())
+        z.array(z.number().int().positive()),
+        normalizeAppIds
       ));
     }
     return this.cached('searchApps', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.search,
       opts,
-      z.array(AppSchema)
+      z.array(AppSchema),
+      normalizeArray(normalizeApp)
     ));
   }
 
@@ -181,7 +214,8 @@ export class AppStoreScraperAdapter implements AppStoreProvider {
     return this.cached('getDeveloperApps', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.developer,
       opts,
-      z.array(AppSchema)
+      z.array(AppSchema),
+      normalizeArray(normalizeApp)
     ));
   }
 
@@ -205,7 +239,8 @@ export class AppStoreScraperAdapter implements AppStoreProvider {
     return this.cached('getSimilarApps', input as Record<string, unknown>, context, opts => callScraper(
       this.scraper.similar,
       opts,
-      z.array(AppSchema)
+      z.array(AppSchema),
+      normalizeArray(normalizeApp)
     ));
   }
 

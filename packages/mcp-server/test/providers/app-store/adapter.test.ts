@@ -31,8 +31,18 @@ const validApp: App = {
   supportedDevices: []
 };
 
-const validSummary: AppSummary = {
+const rawStringApp = {
+  ...validApp,
   id: '1234',
+  primaryGenreId: '6002',
+  price: '0',
+  developerId: '9999',
+  score: '4.5',
+  reviews: '125'
+};
+
+const validSummary: AppSummary = {
+  id: 1234,
   appId: 'com.example.app',
   title: 'Example App',
   icon: 'https://example.com/icon.png',
@@ -41,7 +51,7 @@ const validSummary: AppSummary = {
   free: true,
   developer: 'Example Dev',
   genre: 'Utilities',
-  genreId: '6002',
+  genreId: 6002,
   released: '2020-01-01'
 };
 
@@ -106,6 +116,18 @@ test('getApp delegates to scraper and parses result', async () => {
   assert.equal(result.appId, 'com.example.app');
 });
 
+test('getApp normalizes numeric scraper strings before validation', async () => {
+  const adapter = new AppStoreScraperAdapter(
+    makeScraper({ app: () => Promise.resolve(rawStringApp) })
+  );
+  const result = await adapter.getApp({ id: 1234 });
+  assert.equal(result.id, 1234);
+  assert.equal(result.price, 0);
+  assert.equal(result.developerId, 9999);
+  assert.equal(result.score, 4.5);
+  assert.equal(result.reviews, 125);
+});
+
 test('getApp maps not-found error to NOT_FOUND', async () => {
   const adapter = new AppStoreScraperAdapter(
     makeScraper({ app: () => Promise.reject(new Error('App not found (404)')) })
@@ -157,6 +179,16 @@ test('getApp maps unexpected response shape to UPSTREAM_CHANGED', async () => {
   );
 });
 
+test('getApp rejects non-numeric values after normalization', async () => {
+  const adapter = new AppStoreScraperAdapter(
+    makeScraper({ app: () => Promise.resolve({ ...rawStringApp, id: 'not-an-id' }) })
+  );
+  await assert.rejects(
+    () => adapter.getApp({ id: 1234 }),
+    (e: unknown) => e instanceof ProviderError && e.code === ErrorCode.UPSTREAM_CHANGED
+  );
+});
+
 test('listApps returns AppSummary[] by default', async () => {
   const adapter = new AppStoreScraperAdapter(
     makeScraper({ list: () => Promise.resolve([validSummary]) })
@@ -165,25 +197,48 @@ test('listApps returns AppSummary[] by default', async () => {
   assert.equal(result.length, 1);
 });
 
+test('listApps normalizes numeric summary values and identifiers', async () => {
+  const adapter = new AppStoreScraperAdapter(
+    makeScraper({
+      list: () => Promise.resolve([{
+        ...validSummary,
+        id: '1234',
+        price: '1.99',
+        developerId: '9999',
+        genreId: '6002'
+      }])
+    })
+  );
+  const [result] = await adapter.listApps({});
+  assert.ok(result !== undefined);
+  assert.equal(result.id, 1234);
+  assert.equal(result.price, 1.99);
+  assert.equal(result.developerId, 9999);
+  assert.ok('genreId' in result);
+  assert.equal(result.genreId, 6002);
+});
+
 test('listApps returns App[] when fullDetail is true', async () => {
   const adapter = new AppStoreScraperAdapter(
-    makeScraper({ list: () => Promise.resolve([validApp]) })
+    makeScraper({ list: () => Promise.resolve([rawStringApp]) })
   );
-  const result = await adapter.listApps({ fullDetail: true });
+  const result = await adapter.listApps({ fullDetail: true }) as App[];
   assert.equal(result.length, 1);
+  assert.equal(result[0]?.id, 1234);
 });
 
 test('searchApps returns App[] by default', async () => {
   const adapter = new AppStoreScraperAdapter(
-    makeScraper({ search: () => Promise.resolve([validApp]) })
+    makeScraper({ search: () => Promise.resolve([rawStringApp]) })
   );
-  const result = await adapter.searchApps({ term: 'test' });
+  const result = await adapter.searchApps({ term: 'test' }) as App[];
   assert.equal(result.length, 1);
+  assert.equal(result[0]?.id, 1234);
 });
 
 test('searchApps returns number[] when idsOnly is true', async () => {
   const adapter = new AppStoreScraperAdapter(
-    makeScraper({ search: () => Promise.resolve([1234, 5678]) })
+    makeScraper({ search: () => Promise.resolve(['1234', '5678']) })
   );
   const result = await adapter.searchApps({ term: 'test', idsOnly: true });
   assert.deepEqual(result, [1234, 5678]);
