@@ -8,6 +8,9 @@ The goal is to provide an interface as close as possible to the
 npm install app-store-scraper
 ```
 
+This package requires Node.js 16 or newer and is published as an ES module.
+CommonJS `require()` is not supported.
+
 ## Usage
 Available methods:
 - [app](#app): Retrieves the full detail of an application.
@@ -33,7 +36,7 @@ Retrieves the full detail of an application. Options:
 Example:
 
 ```javascript
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.app({id: 553834731}).then(console.log).catch(console.log);
 ```
@@ -86,7 +89,7 @@ Results:
 Example with `ratings` option:
 
 ```javascript
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.app({id: 553834731, ratings: true}).then(console.log).catch(console.log);
 ```
@@ -127,7 +130,7 @@ Retrieves a list of applications from one of the collections at iTunes. Options:
 Example:
 
 ```js
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.list({
   collection: store.collection.TOP_FREE_IPAD,
@@ -188,7 +191,7 @@ Retrieves a list of apps that results of searching by the given term. Options:
 Example:
 
 ```js
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.search({
   term: 'panda',
@@ -229,7 +232,7 @@ Retrieves a list of applications by the give developer id. Options:
 Example:
 
 ```javascript
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.developer({devId: 284882218}).then(console.log).catch(console.log);
 ```
@@ -261,7 +264,7 @@ Retrieves the ratings for the app. Currently only for US App Store. Options:
 Example:
 
 ```js
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.privacy({
   id: 324684580,
@@ -307,7 +310,7 @@ to `10000` for the most searched terms.
 Example:
 
 ```js
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.suggest({term: 'panda'}).then(console.log).catch(console.log);
 ```
@@ -335,7 +338,7 @@ Returns the list of "customers also bought" apps shown in the app's detail page.
 Example:
 
 ```js
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.similar({id: 553834731}).then(console.log).catch(console.log);
 ```
@@ -373,7 +376,7 @@ Retrieves a page of reviews for the app. Options:
 Example:
 
 ```js
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.reviews({
   appId: 'com.midasplayer.apps.candycrushsaga',
@@ -420,7 +423,7 @@ Retrieves the ratings for the app. Options:
 Example:
 
 ```js
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.ratings({
   appId: 'com.midasplayer.apps.candycrushsaga',
@@ -453,7 +456,7 @@ Retrieves the version history for the app. Options:
 Example:
 
 ```js
-var store = require('app-store-scraper');
+import store from 'app-store-scraper';
 
 store.versionHistory({
   id: 324684580,
@@ -483,9 +486,10 @@ to avoid requesting the same data twice. The `memoized` function returns the
 store object that caches its results:
 
 ``` javascript
-var store = require('app-store-scraper'); // regular non caching version
-var memoized = require('app-store-scraper').memoized(); // cache with default options
-var memoizedCustom = require('app-store-scraper').memoized({ maxAge: 1000 * 60 }); // cache with default options
+import store, { memoized as createMemoized } from 'app-store-scraper'; // regular non caching version
+
+const memoized = createMemoized(); // cache with default options
+const memoizedCustom = createMemoized({ maxAge: 1000 * 60 }); // cache with custom options
 
 memoized.app({id: 553834731}) // will make a request
   .then(() => memoized.app({id: 553834731})); // will resolve to the cached value without requesting

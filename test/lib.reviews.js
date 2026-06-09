@@ -1,8 +1,6 @@
-'use strict';
-
-const store = require('../index');
-const assert = require('chai').assert;
-const assertValidUrl = require('./common').assertValidUrl;
+import { assert } from 'chai';
+import store from '../index.js';
+import { assertValidUrl } from './common.js';
 
 function assertValid (review) {
   assert.isString(review.id);

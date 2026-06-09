@@ -1,10 +1,8 @@
-'use strict';
-
-const assert = require('chai').assert;
-const http = require('http');
-const zlib = require('zlib');
-const request = require('../lib/http-client');
-const common = require('../lib/common');
+import { assert } from 'chai';
+import * as http from 'node:http';
+import * as zlib from 'node:zlib';
+import common from '../lib/common.js';
+import request from '../lib/http-client.js';
 
 describe('HTTP client', () => {
   let server;

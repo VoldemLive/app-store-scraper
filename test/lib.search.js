@@ -1,8 +1,6 @@
-'use strict';
-
-const store = require('../index');
-const assertValidApp = require('./common').assertValidApp;
-const assert = require('chai').assert;
+import { assert } from 'chai';
+import store from '../index.js';
+import { assertValidApp } from './common.js';
 
 describe('Search method', () => {
   it('should fetch a valid application list', () => {

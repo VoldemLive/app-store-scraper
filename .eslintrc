@@ -4,6 +4,9 @@
     "mocha": true,
     "node": true
   },
+  "parserOptions": {
+    "sourceType": "module"
+  },
   "extends": "semistandard",
   "plugins": [
     "standard"

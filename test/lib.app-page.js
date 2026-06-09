@@ -1,8 +1,6 @@
-'use strict';
-
-const assert = require('chai').assert;
-const appPage = require('../lib/app-page');
-const common = require('../lib/common');
+import { assert } from 'chai';
+import appPage from '../lib/app-page.js';
+import common from '../lib/common.js';
 
 describe('App page parser', () => {
   it('should parse serialized App Store data', () => {
