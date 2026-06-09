@@ -123,6 +123,22 @@ npx @modelcontextprotocol/inspector node dist/src/cli.js
 The Inspector can initialize the server, list its App Store tools and reference
 resources, and invoke them.
 
+## Prompts
+
+Prompts are user-invoked workflow templates. They recommend read-only tools and
+resources but do not execute tools themselves.
+
+| Prompt | Required input | Purpose |
+| --- | --- | --- |
+| `app_store_analyze_market` | `term` | Analyze search competitors, charts, positioning, and opportunities |
+| `app_store_compare_competitors` | `appIdentifiers` | Compare two or more apps using listing, rating, privacy, and release data |
+| `app_store_audit_listing` | `appIdentifier` | Audit one listing for positioning, trust, and conversion opportunities |
+| `app_store_analyze_reviews_and_ratings` | `appIdentifier` | Analyze review themes, rating distribution, and product actions |
+
+Each prompt accepts an optional two-letter `country`. Market analysis also
+accepts an optional `category`. Prompt instructions require sourced facts,
+analysis, recommendations, and data gaps to be reported separately.
+
 ## Verification
 
 ```sh
