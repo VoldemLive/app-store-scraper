@@ -113,7 +113,11 @@ test('resource contents are deterministic across reads', async () => {
   const { client } = await startTestServer();
   const r1 = await client.readResource({ uri: 'app-store://reference/collections' });
   const r2 = await client.readResource({ uri: 'app-store://reference/collections' });
-  const t1 = 'text' in (r1.contents[0] ?? {}) ? (r1.contents[0] as { text: string }).text : '';
-  const t2 = 'text' in (r2.contents[0] ?? {}) ? (r2.contents[0] as { text: string }).text : '';
-  assert.equal(t1, t2);
+  assert.ok(r1.contents[0] !== undefined, 'r1 has no content');
+  assert.ok(r2.contents[0] !== undefined, 'r2 has no content');
+  const c1 = r1.contents[0];
+  const c2 = r2.contents[0];
+  assert.ok('text' in c1, 'r1 content is not text');
+  assert.ok('text' in c2, 'r2 content is not text');
+  assert.equal((c1 as { text: string }).text, (c2 as { text: string }).text);
 });
