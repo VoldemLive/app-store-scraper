@@ -462,11 +462,14 @@ Returns:
 
 ### ratings
 
-Retrieves the ratings for the app. Options:
+Retrieves the country-specific rating count and star histogram for the app.
+Apple may abbreviate large displayed counts, so totals parsed from values such
+as `3.9M` are approximate.
 
-* `id`: the iTunes "trackId" of the app, for example `553834731` for Candy Crush Saga. Either this or the `appId` should be provided.
-* `appId`: the iTunes "bundleId" of the app, for example `com.midasplayer.apps.candycrushsaga` for Candy Crush Saga. Either this or the `id` should be provided.
-* `country`: the two letter country code to get the reviews from. Defaults to `us`.
+Options:
+
+* `id`: the required numeric iTunes "trackId", for example `553834731` for Candy Crush Saga.
+* `country`: a supported two-letter App Store country code. Defaults to `us`.
 
 Example:
 
@@ -474,7 +477,8 @@ Example:
 import store from 'app-store-scraper';
 
 store.ratings({
-  appId: 'com.midasplayer.apps.candycrushsaga',
+  id: 553834731,
+  country: 'fr'
 })
 .then(console.log)
 .catch(console.log);
