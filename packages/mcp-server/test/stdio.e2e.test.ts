@@ -56,6 +56,36 @@ test('reports startup failure only on stderr', () => {
   assert.equal(result.stderr, 'MCP server startup failed.\n');
 });
 
+test('lists all 6 discovery tools via stdio', async () => {
+  const client = new Client({ name: 'tool-discovery-e2e', version: '1.0.0' });
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [cli],
+    cwd: process.cwd(),
+    env: { MCP_LOG_LEVEL: 'error' },
+    stderr: 'pipe'
+  });
+
+  try {
+    await client.connect(transport);
+    const { tools } = await client.listTools();
+    const names = tools.map((t) => t.name);
+    const expected = [
+      'app_store_get_app',
+      'app_store_search_apps',
+      'app_store_list_apps',
+      'app_store_get_developer_apps',
+      'app_store_get_suggestions',
+      'app_store_get_similar_apps'
+    ];
+    for (const name of expected) {
+      assert.ok(names.includes(name), `Missing tool: ${name}`);
+    }
+  } finally {
+    await client.close();
+  }
+});
+
 test('closes gracefully on SIGTERM without writing to stdout', async () => {
   const child = spawn(process.execPath, [cli], {
     env: {
