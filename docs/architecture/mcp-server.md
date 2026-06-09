@@ -222,7 +222,7 @@ The initial catalog covers every current public scraper method.
 | `app_store_get_suggestions` | `term` | `country`, response controls | `Suggestion[]` |
 | `app_store_get_similar_apps` | exactly one of `id`, `appId` | `country`, `lang`, response controls | `App[]` |
 | `app_store_get_reviews` | exactly one of `id`, `appId` | `country`, `page`, `sort`, response controls | `Review[]` |
-| `app_store_get_ratings` | `id` | `country` | `Ratings` |
+| `app_store_get_ratings` | `id` | `country`, response controls | `Ratings` |
 | `app_store_get_version_history` | `id` | `country`, response controls | `VersionHistoryItem[]` |
 
 `requestOptions` and raw throttle controls are intentionally absent. Network
@@ -237,7 +237,7 @@ app-store://reference/categories
 app-store://reference/collections
 app-store://reference/markets
 app-store://reference/devices
-app-store://reference/review-sort-orders
+app-store://reference/sort
 ```
 
 Resource reads are deterministic and perform no network requests.
@@ -277,17 +277,16 @@ Configuration is loaded once at startup from validated environment variables
 or injected configuration. Invalid configuration fails startup with diagnostics
 on stderr.
 
-Shared configuration includes:
+Implemented shared configuration includes:
 
-- default country and language;
 - request timeout, retries, backoff, and throttling;
 - cache TTL and maximum entries;
 - maximum result items and serialized response bytes;
-- enabled optional providers and write capabilities;
 - logging level and redaction policy.
 
-Configuration names are documented when implemented. Tools must not override
-network policy, credentials, or provider endpoints.
+Future providers and transports may add validated defaults, capability flags,
+and write controls. Configuration names are documented when implemented. Tools
+must not override network policy, credentials, or provider endpoints.
 
 ## Security requirements
 

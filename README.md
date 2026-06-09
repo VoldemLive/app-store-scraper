@@ -63,13 +63,13 @@ App Store scraper or stdio MCP server.
 Available methods:
 - [app](#app): Retrieves the full detail of an application.
 - [list](#list): Retrieves a list of applications from one of the collections at iTunes.
-- [search](#search): Retrieves a list of apps that results of searching by the given term.
+- [search](#search): Retrieves apps matching the given search term.
 - [developer](#developer): Retrieves a list of apps by the given developer id.
-- [privacy](#privacy): Display the privacy details for the app.
-- [suggest](#suggest): Given a string returns up to 50 suggestions to complete a search query term.
+- [privacy](#privacy): Retrieves the privacy disclosures for the app.
+- [suggest](#suggest): Retrieves suggestions that complete a partial search term.
 - [similar](#similar): Returns the list of "customers also bought" apps shown in the app's detail page.
 - [reviews](#reviews): Retrieves a page of reviews for the app.
-- [ratings](#ratings): Retrieves the ratings for the app.
+- [ratings](#ratings): Retrieves the country-specific rating count and star histogram for the app.
 - [versionHistory](#versionHistory): Retrieves the version history for the app.
 
 ### app
@@ -79,7 +79,7 @@ Retrieves the full detail of an application. Options:
 * `appId`: the iTunes "bundleId" of the app, for example `com.midasplayer.apps.candycrushsaga` for Candy Crush Saga. Either this or the `id` should be provided.
 * `country`: the two letter country code to get the app details from. Defaults to `us`. Note this also affects the language of the data.
 * `lang`: language code for the result text. Defaults to undefined, so country specific language should be used automatically.
-+ `ratings`: load additional ratings information like `ratings` number and `histogram`
+* `ratings`: load additional rating count and star histogram information.
 
 Example:
 
@@ -226,13 +226,12 @@ Returns:
 
 ### search
 
-Retrieves a list of apps that results of searching by the given term. Options:
+Retrieves apps matching the given search term. Options:
 
 * `term`: the term to search for (required).
 * `num`: the amount of elements to retrieve. Defaults to `50`, maximum allowed is `200`.
-* `page`: page of results to retrieve. Defaults to to `1`.
-* `country`: the two letter country code to get the similar apps
-  from. Defaults to `us`.
+* `page`: page of results to retrieve. Defaults to `1`.
+* `country`: the two letter country code to search in. Defaults to `us`.
 * `lang`: language code for the result text. Defaults to `en-us`.
 * `idsOnly`: (optional, defaults to `false`): skip extra lookup request. Search results will contain array of application ids.
 
@@ -245,8 +244,8 @@ store.search({
   term: 'panda',
   num: 2,
   page: 3,
-  country : 'us',
-  lang: 'lang'
+  country: 'us',
+  lang: 'en-us'
 })
 .then(console.log)
 .catch(console.log);
@@ -271,9 +270,9 @@ Results:
 ```
 
 ### developer
-Retrieves a list of applications by the give developer id. Options:
+Retrieves a list of applications by the given developer id. Options:
 
-* `devId`: the iTunes "artistId" of the developer, for example `284882218` for Facebook.
+* `devId`: the required iTunes "artistId" of the developer, for example `284882218` for Facebook.
 * `country`: the two letter country code to get the app details from. Defaults to `us`. Note this also affects the language of the data.
 * `lang`: language code for the result text. Defaults to undefined, so country specific language should be used automatically.
 
@@ -305,9 +304,10 @@ Results:
 
 ### privacy
 
-Retrieves the ratings for the app. Currently only for US App Store. Options:
+Retrieves the App Store privacy disclosures for the app. Options:
 
-* `id`: the iTunes "trackId" of the app, for example `553834731` for Candy Crush Saga.
+* `id`: the required iTunes "trackId" of the app, for example `553834731` for Candy Crush Saga.
+* `country`: the two letter country code to get the privacy disclosures from. Defaults to `us`.
 
 Example:
 
@@ -351,9 +351,11 @@ Returns:
 
 ### suggest
 
-Given a string returns up to 50 suggestions to complete a search query term.
-A priority index is also returned which goes from `0` for terms with low traffic
-to `10000` for the most searched terms.
+Retrieves the suggestions currently returned by the App Store for a partial
+search term. Each result contains a `term` string. Options:
+
+* `term`: the required partial search term.
+* `country`: the two letter country code to get suggestions from. Defaults to `us`.
 
 Example:
 
@@ -382,6 +384,8 @@ Returns the list of "customers also bought" apps shown in the app's detail page.
 
 * `id`: the iTunes "trackId" of the app, for example `553834731` for Candy Crush Saga. Either this or the `appId` should be provided.
 * `appId`: the iTunes "bundleId" of the app, for example `com.midasplayer.apps.candycrushsaga` for Candy Crush Saga. Either this or the `id` should be provided.
+* `country`: the two letter country code to get similar apps from. Defaults to `us`.
+* `lang`: language code for the returned app details. Defaults to undefined, so country specific language should be used automatically.
 
 Example:
 
@@ -446,7 +450,7 @@ Returns:
     title: 'Great way to pass time or unwind',
     text: 'I was a fan of Bejeweled many moons ago...',
     updated: '2021-07-26T18:26:24-07:00',
-    url: 'https://itunes.apple.com/us/review?id=553834731&type=Purple%20Software' },,
+    url: 'https://itunes.apple.com/us/review?id=553834731&type=Purple%20Software' },
   { id: '1472864708',
     userName: 'Jennamaxkidd',
     userUrl: 'https://itunes.apple.com/us/reviews/id223990784',
@@ -503,7 +507,8 @@ Returns:
 
 Retrieves the version history for the app. Options:
 
-* `id`: the iTunes "trackId" of the app, for example `553834731` for Candy Crush Saga.
+* `id`: the required iTunes "trackId" of the app, for example `553834731` for Candy Crush Saga.
+* `country`: the two letter country code to get the version history from. Defaults to `us`.
 
 Example:
 
