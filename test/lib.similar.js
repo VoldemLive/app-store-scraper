@@ -3,6 +3,26 @@ import store from '../index.js';
 import { assertValidApp } from './common.js';
 
 describe('Similar method', () => {
+  it('should reject with validation error when called without options', (done) => {
+    store.similar()
+      .then(() => done('should not resolve'))
+      .catch((err) => {
+        assert.equal(err.message, 'Either id or appId is required');
+        done();
+      })
+      .catch(done);
+  });
+
+  it('should reject with validation error when id and appId are both missing', (done) => {
+    store.similar({})
+      .then(() => done('should not resolve'))
+      .catch((err) => {
+        assert.equal(err.message, 'Either id or appId is required');
+        done();
+      })
+      .catch(done);
+  });
+
   it('should fetch a valid application list', () => {
     return store.similar({id: '553834731'})
       .then((apps) => apps.map(assertValidApp));

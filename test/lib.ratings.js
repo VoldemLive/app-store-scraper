@@ -39,6 +39,26 @@ describe('Ratings method', () => {
     });
   });
 
+  it('should reject with validation error when called without options', (done) => {
+    store.ratings()
+      .then(() => done('should not resolve'))
+      .catch((err) => {
+        assert.equal(err.message, 'id is required');
+        done();
+      })
+      .catch(done);
+  });
+
+  it('should reject with validation error when id is missing', (done) => {
+    store.ratings({})
+      .then(() => done('should not resolve'))
+      .catch((err) => {
+        assert.equal(err.message, 'id is required');
+        done();
+      })
+      .catch(done);
+  });
+
   it('should fetch valid ratings data by id', () => {
     return store.ratings({id})
       .then((ratings) => {

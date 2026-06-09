@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { countryInput } from '../../../schemas/index.js';
 
-const country = z.string().length(2).optional().describe('Two-letter App Store country code (default: us)');
+const country = countryInput;
 const appIdentifier = z.string().min(1).describe('Numeric App Store ID or bundle identifier');
 
 function prompt (text: string) {

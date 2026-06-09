@@ -77,7 +77,7 @@ The server exposes all current App Store scraper operations:
 
 All App Store tools are read-only. Tool inputs cannot supply arbitrary URLs,
 HTTP methods, headers, credentials, or raw scraper `requestOptions`.
-App Store tool country inputs accept only storefronts listed by the
+App Store tool and prompt country inputs accept only storefronts listed by the
 `app-store://reference/markets` resource, are case-insensitive, and default to
 `us` when omitted.
 
