@@ -139,6 +139,15 @@ Each prompt accepts an optional two-letter `country`. Market analysis also
 accepts an optional `category`. Prompt instructions require sourced facts,
 analysis, recommendations, and data gaps to be reported separately.
 
+## Optional provider stubs
+
+The package exports an `AppleAdsProvider` contract, normalized Apple Ads domain
+schemas, capability flags, and `UnsupportedAppleAdsProvider`. This is an
+extension stub only: the default stdio server does not read Apple Ads
+credentials, perform OAuth, make Apple Ads requests, or expose `apple_ads_*`
+tools. Future providers should implement the version-independent contract and
+register user-facing tools only for supported capabilities.
+
 ## Verification
 
 ```sh
