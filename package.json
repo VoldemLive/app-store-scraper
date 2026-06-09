@@ -1,22 +1,32 @@
 {
   "name": "app-store-scraper",
-  "version": "0.18.0",
-  "description": "scrape data from the itunes app store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App Store market data scraper with a local stdio MCP server",
   "type": "module",
   "main": "index.js",
   "exports": "./index.js",
   "engines": {
-    "node": ">=16"
+    "node": ">=20.18.1"
   },
   "scripts": {
+    "setup": "npm install && npm run setup:mcp",
+    "build": "npm run build:mcp",
+    "start": "npm run start:mcp",
+    "setup:mcp": "npm --prefix packages/mcp-server install",
+    "build:mcp": "npm --prefix packages/mcp-server run build",
+    "start:mcp": "npm --prefix packages/mcp-server run dev",
+    "test:mcp": "npm --prefix packages/mcp-server test",
+    "lint:mcp": "npm --prefix packages/mcp-server run lint",
+    "check:mcp": "npm --prefix packages/mcp-server run check",
+    "check": "npm run lint && npm test && npm run check:secrets && npm run check:mcp",
     "test": "mocha --timeout 8000",
     "lint": "eslint .",
-    "check:secrets": "node scripts/check-secrets.js",
-    "prepack": "npm run check:secrets"
+    "check:secrets": "node scripts/check-secrets.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facundoolano/app-store-scraper.git"
+    "url": "git+https://github.com/VoldemLive/app-store-scraper.git"
   },
   "keywords": [
     "mac",
@@ -26,11 +36,14 @@
     "scraper"
   ],
   "author": "Facundo Olano",
-  "license": "ISC",
+  "contributors": [
+    "Volodymyr Shynkarov"
+  ],
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/facundoolano/app-store-scraper/issues"
+    "url": "https://github.com/VoldemLive/app-store-scraper/issues"
   },
-  "homepage": "https://github.com/facundoolano/app-store-scraper#readme",
+  "homepage": "https://github.com/VoldemLive/app-store-scraper#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
     "debug": "^2.2.0",
@@ -46,7 +59,10 @@
     "eslint-config-standard": "^5.1.0",
     "eslint-plugin-promise": "^1.1.0",
     "eslint-plugin-standard": "^4.0.1",
-    "mocha": "^10.2.0",
+    "mocha": "^11.3.0",
     "validator": "^13.11.0"
+  },
+  "overrides": {
+    "serialize-javascript": "^7.0.5"
   }
 }

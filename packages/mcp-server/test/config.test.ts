@@ -5,7 +5,7 @@ import { ConfigError, loadConfig } from '../src/config.js';
 test('loads documented defaults', () => {
   assert.deepEqual(loadConfig({}), {
     name: 'app-store-scraper-mcp',
-    version: '0.1.0',
+    version: '1.0.0',
     logLevel: 'info',
     request: {
       timeoutMs: 10000,

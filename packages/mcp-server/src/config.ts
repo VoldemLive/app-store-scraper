@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const configSchema = z.object({
   MCP_SERVER_NAME: z.string().trim().min(1).default('app-store-scraper-mcp'),
-  MCP_SERVER_VERSION: z.string().trim().min(1).default('0.1.0'),
+  MCP_SERVER_VERSION: z.string().trim().min(1).default('1.0.0'),
   MCP_LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   MCP_REQUEST_TIMEOUT_MS: z.coerce.number().int().min(100).max(120000).default(10000),
   MCP_REQUEST_RETRIES: z.coerce.number().int().min(0).max(10).default(2),
