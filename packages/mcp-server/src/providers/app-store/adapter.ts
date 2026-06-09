@@ -42,7 +42,7 @@ function normalizeError (error: unknown): ProviderError {
     return new ProviderError(ErrorCode.UPSTREAM_CHANGED, msg, false);
   }
 
-  if (/(App|Developer) not found|App not found.*404|404/i.test(msg)) {
+  if (/(App|Developer) not found/i.test(msg)) {
     return new ProviderError(ErrorCode.NOT_FOUND, msg, false);
   }
 

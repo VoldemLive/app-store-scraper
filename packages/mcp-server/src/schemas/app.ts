@@ -12,7 +12,7 @@ export const AppSchema = z.object({
   primaryGenre: z.string(),
   primaryGenreId: z.number(),
   contentRating: z.string(),
-  languages: z.array(z.string()),
+  languages: z.array(z.string()).nullish(),
   size: z.string().optional(),
   requiredOsVersion: z.string().optional(),
   released: z.string(),
