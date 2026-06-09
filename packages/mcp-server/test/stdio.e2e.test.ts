@@ -148,6 +148,33 @@ test('lists all 5 reference resources via stdio', async () => {
   }
 });
 
+test('lists all 4 App Store prompts via stdio', async () => {
+  const client = new Client({ name: 'prompt-e2e', version: '1.0.0' });
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [cli],
+    cwd: process.cwd(),
+    env: { MCP_LOG_LEVEL: 'error' },
+    stderr: 'pipe'
+  });
+
+  try {
+    await client.connect(transport);
+    const { prompts } = await client.listPrompts();
+    const names = prompts.map(prompt => prompt.name);
+    for (const name of [
+      'app_store_analyze_market',
+      'app_store_compare_competitors',
+      'app_store_audit_listing',
+      'app_store_analyze_reviews_and_ratings'
+    ]) {
+      assert.ok(names.includes(name), `Missing prompt: ${name}`);
+    }
+  } finally {
+    await client.close();
+  }
+});
+
 test('closes gracefully on SIGTERM without writing to stdout', async () => {
   const child = spawn(process.execPath, [cli], {
     env: {
