@@ -23,7 +23,9 @@ configuration, verification, rotation, and incident-response guidance.
 An extensible MCP server is planned around the scraper's public API. The
 [MCP server architecture](docs/architecture/mcp-server.md) defines the stable
 tool and resource contracts, provider boundaries, security model, and delivery
-sequence for stdio, OCR, Apple Ads, and future transports.
+sequence for stdio, OCR, Apple Ads, and future transports. The initial
+[TypeScript stdio server](packages/mcp-server/README.md) is developed as a
+separate Node.js 20+ package.
 
 ## Usage
 Available methods:
