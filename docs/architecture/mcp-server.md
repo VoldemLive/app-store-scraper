@@ -105,7 +105,7 @@ API versions, credentials, headers, or transport-specific errors.
 interface AppStoreProvider {
   getApp(input: GetAppInput): Promise<App>;
   listApps(input: ListAppsInput): Promise<AppSummary[] | App[]>;
-  searchApps(input: SearchAppsInput): Promise<App[] | string[]>;
+  searchApps(input: SearchAppsInput): Promise<App[] | number[]>;
   getDeveloperApps(input: DeveloperAppsInput): Promise<App[]>;
   getPrivacy(input: AppIdInput): Promise<PrivacyDetails>;
   getSuggestions(input: SuggestInput): Promise<Suggestion[]>;
@@ -127,7 +127,9 @@ interface AppleAdsProvider {
 
 Provider construction uses dependency injection so tests can use deterministic
 fakes. The first `AppStoreProvider` adapter delegates to this package's public
-API.
+API. The adapter normalizes numeric scraper fields before strict domain-schema
+validation, so MCP app, developer, genre, and `idsOnly` identifiers are
+consistently returned as numbers.
 
 ## Public naming and compatibility
 
@@ -216,7 +218,7 @@ The initial catalog covers every current public scraper method.
 | --- | --- | --- | --- |
 | `app_store_get_app` | exactly one of `id`, `appId` | `country`, `lang`, `ratings`, response controls | `App` |
 | `app_store_list_apps` | none | `collection`, `category`, `country`, `lang`, `num`, `fullDetail`, response controls | `AppSummary[]` or `App[]` |
-| `app_store_search_apps` | `term` | `num`, `page`, `country`, `lang`, `idsOnly`, response controls | `App[]` or app IDs |
+| `app_store_search_apps` | `term` | `num`, `page`, `country`, `lang`, `idsOnly`, response controls | `App[]` or numeric app IDs |
 | `app_store_get_developer_apps` | `devId` | `country`, `lang`, response controls | `App[]` |
 | `app_store_get_privacy` | `id` | `country`, response controls | `PrivacyDetails` |
 | `app_store_get_suggestions` | `term` | `country`, response controls | `Suggestion[]` |
