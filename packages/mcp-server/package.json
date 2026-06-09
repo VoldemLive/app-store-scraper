@@ -16,11 +16,12 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "eslint .",
-    "test": "npm run build && node --test dist/test/*.test.js",
+    "test": "npm run build && node --test 'dist/test/**/*.test.js'",
     "check": "npm run lint && npm test"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "app-store-scraper": "file:../..",
     "zod": "^4.4.3"
   },
   "devDependencies": {
