@@ -128,12 +128,12 @@ resources, and invoke them.
 Prompts are user-invoked workflow templates. They recommend read-only tools and
 resources but do not execute tools themselves.
 
-| Prompt | Required input | Purpose |
+| Prompt | Required input | Tools it may invoke |
 | --- | --- | --- |
-| `app_store_analyze_market` | `term` | Analyze search competitors, charts, positioning, and opportunities |
-| `app_store_compare_competitors` | `appIdentifiers` | Compare two or more apps using listing, rating, privacy, and release data |
-| `app_store_audit_listing` | `appIdentifier` | Audit one listing for positioning, trust, and conversion opportunities |
-| `app_store_analyze_reviews_and_ratings` | `appIdentifier` | Analyze review themes, rating distribution, and product actions |
+| `app_store_analyze_market` | `term` | `app_store_search_apps`, `app_store_list_apps`, `app_store_get_app` |
+| `app_store_compare_competitors` | `appIdentifiers` | `app_store_get_app`, `app_store_get_ratings`, `app_store_get_privacy`, `app_store_get_version_history`, `app_store_get_similar_apps` |
+| `app_store_audit_listing` | `appIdentifier` | `app_store_get_app`, `app_store_get_ratings`, `app_store_get_privacy`, `app_store_get_version_history`, `app_store_get_similar_apps` |
+| `app_store_analyze_reviews_and_ratings` | `appIdentifier` | `app_store_get_reviews`, `app_store_get_ratings`, `app_store_get_app`, `app_store_get_version_history` |
 
 Each prompt accepts an optional two-letter `country`. Market analysis also
 accepts an optional `category`. Prompt instructions require sourced facts,
