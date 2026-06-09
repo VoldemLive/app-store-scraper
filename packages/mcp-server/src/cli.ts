@@ -6,32 +6,27 @@ function writeDiagnostic (message: string): void {
   process.stderr.write(`${message}\n`);
 }
 
-let shuttingDown = false;
 let serverRuntime: StdioServerRuntime | null = null;
 
-async function shutdown (signal: string): Promise<void> {
-  if (shuttingDown) return;
-  shuttingDown = true;
+function handleSignal (signal: string): void {
   writeDiagnostic(`MCP server shutting down after ${signal}.`);
-  try {
-    await serverRuntime?.close();
-    process.exitCode = 0;
-  } catch {
-    writeDiagnostic('MCP server shutdown failed.');
-    process.exitCode = 1;
+  if (serverRuntime !== null) {
+    serverRuntime.close()
+      .then(() => process.exit(0))
+      .catch(() => {
+        writeDiagnostic('MCP server shutdown failed.');
+        process.exit(1);
+      });
+  } else {
+    process.exit(0);
   }
 }
 
-process.once('SIGINT', () => void shutdown('SIGINT'));
-process.once('SIGTERM', () => void shutdown('SIGTERM'));
+process.once('SIGINT', () => handleSignal('SIGINT'));
+process.once('SIGTERM', () => handleSignal('SIGTERM'));
 
 try {
-  const runtime = await startStdioServer();
-  if (shuttingDown) {
-    await runtime.close();
-  } else {
-    serverRuntime = runtime;
-  }
+  serverRuntime = await startStdioServer();
 } catch {
   writeDiagnostic('MCP server startup failed.');
   process.exitCode = 1;
