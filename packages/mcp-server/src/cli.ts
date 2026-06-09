@@ -2,6 +2,8 @@
 
 import { startStdioServer, type StdioServerRuntime } from './stdio.js';
 
+const CLOSE_TIMEOUT_MS = 5000;
+
 function writeDiagnostic (message: string): void {
   process.stderr.write(`${message}\n`);
 }
@@ -11,7 +13,13 @@ let serverRuntime: StdioServerRuntime | null = null;
 function handleSignal (signal: string): void {
   writeDiagnostic(`MCP server shutting down after ${signal}.`);
   if (serverRuntime !== null) {
-    serverRuntime.close()
+    const closeWithTimeout = Promise.race([
+      serverRuntime.close(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('close timeout')), CLOSE_TIMEOUT_MS).unref()
+      )
+    ]);
+    closeWithTimeout
       .then(() => process.exit(0))
       .catch(() => {
         writeDiagnostic('MCP server shutdown failed.');
@@ -29,5 +37,5 @@ try {
   serverRuntime = await startStdioServer();
 } catch {
   writeDiagnostic('MCP server startup failed.');
-  process.exitCode = 1;
+  process.exit(1);
 }
