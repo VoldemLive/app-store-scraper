@@ -24,6 +24,7 @@ export type ResponseControls = {
   responseMode?: 'compact' | 'full';
   fields?: string[];
   maxItems?: number;
+  provider?: string;
 };
 
 type Extra = RequestHandlerExtra<ServerRequest, ServerNotification>;
@@ -105,7 +106,7 @@ export function createToolExecutor (config: ServerConfig, logger: Logger) {
       const structuredContent = {
         data,
         meta: {
-          provider: 'app-store',
+          provider: controls.provider ?? 'app-store',
           responseMode,
           resultCount: returnedCount,
           totalCount: originalCount,

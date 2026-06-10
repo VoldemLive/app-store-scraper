@@ -17,7 +17,8 @@ export type {
   AppleAdsOrganizationInput,
   AppleAdsCampaignInput,
   AppleAdsAdGroupInput,
-  AppleAdsReportInput
+  AppleAdsReportInput,
+  AppleAdsKeywordSuggestionsInput
 } from './types.js';
 
 export function createAppleAdsProvider (env: NodeJS.ProcessEnv = process.env): AppleAdsProvider {

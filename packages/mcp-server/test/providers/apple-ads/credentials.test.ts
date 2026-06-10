@@ -34,12 +34,6 @@ test('loads credentials from inline private key env var', () => {
   assert.equal(creds.teamId, 'team-id');
   assert.equal(creds.keyId, 'key-id');
   assert.equal(creds.privateKey, BASE_ENV.APPLE_ADS_PRIVATE_KEY);
-  assert.equal(creds.defaultOrgId, undefined);
-});
-
-test('loads optional defaultOrgId when APPLE_ADS_ORG_ID is set', () => {
-  const creds = loadAppleAdsCredentials({ ...BASE_ENV, APPLE_ADS_ORG_ID: 'org-123' });
-  assert.equal(creds.defaultOrgId, 'org-123');
 });
 
 test('loads private key from file when APPLE_ADS_PRIVATE_KEY_PATH is set', () => {

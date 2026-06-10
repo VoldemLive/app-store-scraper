@@ -55,6 +55,13 @@ export const AppleAdsReportRowSchema = z.object({
   metrics: z.record(z.string(), z.number().nullable())
 });
 
+export const AppleAdsKeywordSuggestionSchema = z.object({
+  text: z.string().min(1),
+  matchType: z.string().min(1),
+  bidMin: z.number().nonnegative().optional(),
+  bidMax: z.number().nonnegative().optional()
+});
+
 export type AppleAdsOrganization = z.infer<typeof AppleAdsOrganizationSchema>;
 export type AppleAdsPromotedApp = z.infer<typeof AppleAdsPromotedAppSchema>;
 export type AppleAdsCampaign = z.infer<typeof AppleAdsCampaignSchema>;
@@ -62,3 +69,4 @@ export type AppleAdsAdGroup = z.infer<typeof AppleAdsAdGroupSchema>;
 export type AppleAdsKeyword = z.infer<typeof AppleAdsKeywordSchema>;
 export type AppleAdsCreative = z.infer<typeof AppleAdsCreativeSchema>;
 export type AppleAdsReportRow = z.infer<typeof AppleAdsReportRowSchema>;
+export type AppleAdsKeywordSuggestion = z.infer<typeof AppleAdsKeywordSuggestionSchema>;

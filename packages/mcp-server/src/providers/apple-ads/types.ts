@@ -3,6 +3,7 @@ import type {
   AppleAdsCampaign,
   AppleAdsCreative,
   AppleAdsKeyword,
+  AppleAdsKeywordSuggestion,
   AppleAdsOrganization,
   AppleAdsPromotedApp,
   AppleAdsReportRow
@@ -17,6 +18,7 @@ export type AppleAdsCapabilities = {
   keywords: boolean;
   creatives: boolean;
   reports: boolean;
+  keywordSuggestions: boolean;
 };
 
 export type AppleAdsOrganizationInput = { organizationId: string };
@@ -26,6 +28,12 @@ export type AppleAdsReportInput = AppleAdsOrganizationInput & {
   reportType: string;
   startDate: string;
   endDate: string;
+};
+export type AppleAdsKeywordSuggestionsInput = {
+  appAdamId: string;
+  matchTypes?: string[];
+  offset?: number;
+  limit?: number;
 };
 
 export interface AppleAdsProvider {
@@ -37,4 +45,5 @@ export interface AppleAdsProvider {
   listKeywords(input: AppleAdsAdGroupInput, context?: ProviderCallContext): Promise<AppleAdsKeyword[]>;
   listCreatives(input: AppleAdsOrganizationInput, context?: ProviderCallContext): Promise<AppleAdsCreative[]>;
   getReport(input: AppleAdsReportInput, context?: ProviderCallContext): Promise<AppleAdsReportRow[]>;
+  getKeywordSuggestions(input: AppleAdsKeywordSuggestionsInput, context?: ProviderCallContext): Promise<AppleAdsKeywordSuggestion[]>;
 }

@@ -10,7 +10,8 @@ function makeClient (responses: FakeResponses): AppleAdsHttpClient {
   return {
     get: async <T>(path: string, _opts?: unknown): Promise<T> => {
       const key = path.replace(/\/\d+\//g, '/{id}/').replace(/\/\d+$/, '/{id}');
-      const normalized = responses[key] ?? responses[path];
+      const pathWithoutQuery = path.split('?')[0]!;
+      const normalized = responses[key] ?? responses[path] ?? responses[pathWithoutQuery];
       if (normalized === undefined) throw new Error(`Unexpected GET ${path}`);
       if (normalized instanceof Error) throw normalized;
       return normalized as T;
@@ -107,7 +108,8 @@ test('capabilities reports all operations supported', () => {
     adGroups: true,
     keywords: true,
     creatives: true,
-    reports: true
+    reports: true,
+    keywordSuggestions: true
   });
 });
 
@@ -212,4 +214,67 @@ test('provider propagates ProviderError from HTTP client', async () => {
     () => provider.listCampaigns({ organizationId: '111' }),
     (e: unknown) => e instanceof ProviderError && e.code === ErrorCode.PERMISSION_DENIED
   );
+});
+
+const SUGGESTIONS_RESPONSE = {
+  data: [
+    {
+      text: 'fitness tracker',
+      matchType: 'BROAD',
+      bidRecommendation: {
+        bidMin: { amount: '0.50' },
+        bidMax: { amount: '2.00' }
+      }
+    },
+    {
+      text: 'run app',
+      matchType: 'EXACT',
+      bidRecommendation: {
+        bidMin: { amount: '1.00' },
+        bidMax: { amount: '3.50' }
+      }
+    },
+    {
+      text: 'workout',
+      matchType: 'BROAD'
+    }
+  ]
+};
+
+test('getKeywordSuggestions normalizes suggestion response to domain type', async () => {
+  const provider = new CampaignManagementV5Provider(makeClient({ '/keywords/targeting/suggestions': SUGGESTIONS_RESPONSE }));
+  const results = await provider.getKeywordSuggestions({ appAdamId: '284882218' });
+  assert.equal(results.length, 3);
+  assert.equal(results[0]!.text, 'fitness tracker');
+  assert.equal(results[0]!.matchType, 'BROAD');
+  assert.equal(results[0]!.bidMin, 0.5);
+  assert.equal(results[0]!.bidMax, 2.0);
+});
+
+test('getKeywordSuggestions handles missing bidRecommendation gracefully', async () => {
+  const provider = new CampaignManagementV5Provider(makeClient({ '/keywords/targeting/suggestions': SUGGESTIONS_RESPONSE }));
+  const results = await provider.getKeywordSuggestions({ appAdamId: '284882218' });
+  const workout = results.find(r => r.text === 'workout')!;
+  assert.equal(workout.bidMin, undefined);
+  assert.equal(workout.bidMax, undefined);
+});
+
+test('getKeywordSuggestions filters by matchTypes when provided', async () => {
+  const provider = new CampaignManagementV5Provider(makeClient({ '/keywords/targeting/suggestions': SUGGESTIONS_RESPONSE }));
+  const results = await provider.getKeywordSuggestions({ appAdamId: '284882218', matchTypes: ['EXACT'] });
+  assert.equal(results.length, 1);
+  assert.equal(results[0]!.text, 'run app');
+  assert.equal(results[0]!.matchType, 'EXACT');
+});
+
+test('getKeywordSuggestions matchType filter is case-insensitive', async () => {
+  const provider = new CampaignManagementV5Provider(makeClient({ '/keywords/targeting/suggestions': SUGGESTIONS_RESPONSE }));
+  const results = await provider.getKeywordSuggestions({ appAdamId: '284882218', matchTypes: ['broad'] });
+  assert.equal(results.length, 2);
+});
+
+test('getKeywordSuggestions returns all results when matchTypes is empty', async () => {
+  const provider = new CampaignManagementV5Provider(makeClient({ '/keywords/targeting/suggestions': SUGGESTIONS_RESPONSE }));
+  const results = await provider.getKeywordSuggestions({ appAdamId: '284882218', matchTypes: [] });
+  assert.equal(results.length, 3);
 });

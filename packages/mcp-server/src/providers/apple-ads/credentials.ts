@@ -7,8 +7,7 @@ const credentialsEnvSchema = z.object({
   APPLE_ADS_TEAM_ID: z.string().trim().min(1),
   APPLE_ADS_KEY_ID: z.string().trim().min(1),
   APPLE_ADS_PRIVATE_KEY: z.string().trim().min(1).optional(),
-  APPLE_ADS_PRIVATE_KEY_PATH: z.string().trim().min(1).optional(),
-  APPLE_ADS_ORG_ID: z.string().trim().min(1).optional()
+  APPLE_ADS_PRIVATE_KEY_PATH: z.string().trim().min(1).optional()
 });
 
 export type AppleAdsCredentials = {
@@ -16,7 +15,6 @@ export type AppleAdsCredentials = {
   readonly teamId: string;
   readonly keyId: string;
   readonly privateKey: string;
-  readonly defaultOrgId?: string;
 };
 
 export function isAppleAdsConfigured (env: NodeJS.ProcessEnv = process.env): boolean {
@@ -66,7 +64,6 @@ export function loadAppleAdsCredentials (env: NodeJS.ProcessEnv = process.env): 
     clientId: data.APPLE_ADS_CLIENT_ID,
     teamId: data.APPLE_ADS_TEAM_ID,
     keyId: data.APPLE_ADS_KEY_ID,
-    privateKey,
-    ...(data.APPLE_ADS_ORG_ID !== undefined && { defaultOrgId: data.APPLE_ADS_ORG_ID })
+    privateKey
   };
 }

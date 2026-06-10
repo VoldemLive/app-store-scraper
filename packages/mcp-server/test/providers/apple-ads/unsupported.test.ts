@@ -12,7 +12,8 @@ test('reports no Apple Ads capabilities', () => {
     adGroups: false,
     keywords: false,
     creatives: false,
-    reports: false
+    reports: false,
+    keywordSuggestions: false
   });
 });
 
@@ -30,7 +31,8 @@ test('returns normalized unsupported errors for every Apple Ads operation', asyn
       reportType: 'campaign',
       startDate: '2026-01-01',
       endDate: '2026-01-02'
-    })
+    }),
+    () => provider.getKeywordSuggestions({ appAdamId: '123' })
   ];
 
   for (const operation of operations) {

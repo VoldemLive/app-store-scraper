@@ -3,6 +3,7 @@ import type { AppStoreProvider } from '../../providers/app-store/types.js';
 import type { AppleAdsProvider } from '../../providers/apple-ads/types.js';
 import type { ToolExecutor } from '../../application/index.js';
 import { registerDiscoveryTools, registerDetailsTools } from './app-store/index.js';
+import { registerAppleAdsTools } from './apple-ads/index.js';
 
 export type ToolProviders = {
   appStore?: AppStoreProvider;
@@ -17,5 +18,11 @@ export function registerTools (
   if (providers.appStore !== undefined) {
     registerDiscoveryTools(server, providers.appStore, executeTool);
     registerDetailsTools(server, providers.appStore, executeTool);
+  }
+  if (providers.appleAds !== undefined) {
+    const caps = providers.appleAds.capabilities();
+    if (caps.organizations || caps.campaigns || caps.adGroups || caps.keywords || caps.creatives || caps.promotedApps || caps.keywordSuggestions) {
+      registerAppleAdsTools(server, providers.appleAds, executeTool);
+    }
   }
 }

@@ -13,11 +13,13 @@ export {
   AppleAdsKeywordSchema,
   AppleAdsCreativeSchema,
   AppleAdsReportRowSchema,
+  AppleAdsKeywordSuggestionSchema,
   type AppleAdsOrganization,
   type AppleAdsPromotedApp,
   type AppleAdsCampaign,
   type AppleAdsAdGroup,
   type AppleAdsKeyword,
   type AppleAdsCreative,
-  type AppleAdsReportRow
+  type AppleAdsReportRow,
+  type AppleAdsKeywordSuggestion
 } from './apple-ads.js';

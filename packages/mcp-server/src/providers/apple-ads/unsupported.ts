@@ -8,7 +8,8 @@ const NO_CAPABILITIES: AppleAdsCapabilities = {
   adGroups: false,
   keywords: false,
   creatives: false,
-  reports: false
+  reports: false,
+  keywordSuggestions: false
 };
 
 function unsupported (): Promise<never> {
@@ -31,4 +32,5 @@ export class UnsupportedAppleAdsProvider implements AppleAdsProvider {
   listKeywords: AppleAdsProvider['listKeywords'] = unsupported;
   listCreatives: AppleAdsProvider['listCreatives'] = unsupported;
   getReport: AppleAdsProvider['getReport'] = unsupported;
+  getKeywordSuggestions: AppleAdsProvider['getKeywordSuggestions'] = unsupported;
 }

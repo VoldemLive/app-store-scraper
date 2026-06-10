@@ -5,7 +5,8 @@ import type {
   AppleAdsOrganizationInput,
   AppleAdsCampaignInput,
   AppleAdsAdGroupInput,
-  AppleAdsReportInput
+  AppleAdsReportInput,
+  AppleAdsKeywordSuggestionsInput
 } from './types.js';
 import type { ProviderCallContext } from '../types.js';
 import { ErrorCode, ProviderError } from '../../errors/index.js';
@@ -16,7 +17,8 @@ import type {
   AppleAdsAdGroup,
   AppleAdsKeyword,
   AppleAdsCreative,
-  AppleAdsReportRow
+  AppleAdsReportRow,
+  AppleAdsKeywordSuggestion
 } from '../../schemas/index.js';
 
 const ALL_CAPABILITIES: AppleAdsCapabilities = {
@@ -26,7 +28,8 @@ const ALL_CAPABILITIES: AppleAdsCapabilities = {
   adGroups: true,
   keywords: true,
   creatives: true,
-  reports: true
+  reports: true,
+  keywordSuggestions: true
 };
 
 const REPORT_PATH: Record<string, string> = {
@@ -98,6 +101,16 @@ type ReportResponse = {
     };
   };
 };
+
+type SuggestionRow = {
+  text: string;
+  matchType: string;
+  bidRecommendation?: {
+    bidMin?: Money;
+    bidMax?: Money;
+  };
+};
+type SuggestionsResponse = { data: SuggestionRow[] };
 
 function amountOf (money?: Money): number | undefined {
   if (money === undefined) return undefined;
@@ -281,5 +294,33 @@ export class CampaignManagementV5Provider implements AppleAdsProvider {
     }
 
     return result;
+  }
+
+  async getKeywordSuggestions (
+    input: AppleAdsKeywordSuggestionsInput,
+    context?: ProviderCallContext
+  ): Promise<AppleAdsKeywordSuggestion[]> {
+    const params = new URLSearchParams({ appAdamId: input.appAdamId });
+    if (input.offset !== undefined) params.set('offset', String(input.offset));
+    if (input.limit !== undefined) params.set('limit', String(input.limit));
+
+    const opts = context?.signal !== undefined ? { signal: context.signal } : {};
+    const res = await this.client.get<SuggestionsResponse>(
+      `/keywords/targeting/suggestions?${params.toString()}`,
+      opts
+    );
+
+    const matchFilter = input.matchTypes !== undefined && input.matchTypes.length > 0
+      ? new Set(input.matchTypes.map(m => m.toUpperCase()))
+      : undefined;
+
+    return res.data
+      .filter(row => matchFilter === undefined || matchFilter.has(row.matchType.toUpperCase()))
+      .map(row => ({
+        text: row.text,
+        matchType: row.matchType,
+        ...(row.bidRecommendation?.bidMin !== undefined && { bidMin: amountOf(row.bidRecommendation.bidMin) }),
+        ...(row.bidRecommendation?.bidMax !== undefined && { bidMax: amountOf(row.bidRecommendation.bidMax) })
+      }));
   }
 }

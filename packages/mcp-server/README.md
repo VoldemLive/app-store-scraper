@@ -65,21 +65,41 @@ Run `npm run build` after changing MCP TypeScript sources.
 
 ## Capabilities
 
-The server exposes all current App Store scraper operations:
+### App Store tools
 
-- discovery tools for app details, search, charts, developer apps,
-  suggestions, and similar apps;
-- detail tools for reviews, ratings, privacy disclosures, and version history;
-- passive reference resources for collections, categories, review sort orders,
-  devices, and markets;
-- prompts for market analysis, competitor comparison, listing audit, and
-  review-and-rating analysis.
+Read-only tools for app research and competitive analysis:
 
-All App Store tools are read-only. Tool inputs cannot supply arbitrary URLs,
-HTTP methods, headers, credentials, or raw scraper `requestOptions`.
-App Store tool and prompt country inputs accept only storefronts listed by the
-`app-store://reference/markets` resource, are case-insensitive, and default to
-`us` when omitted.
+- **Discovery:** `app_store_get_app`, `app_store_search_apps`, `app_store_list_apps`,
+  `app_store_get_developer_apps`, `app_store_get_suggestions`, `app_store_get_similar_apps`
+- **Details:** `app_store_get_reviews`, `app_store_get_ratings`, `app_store_get_privacy`,
+  `app_store_get_version_history`
+- **Resources:** `app-store://reference/collections`, `categories`, `review-sort-orders`,
+  `devices`, `markets`
+- **Prompts:** market analysis, competitor comparison, listing audit, review-and-rating analysis
+
+Tool inputs cannot supply arbitrary URLs, HTTP methods, headers, credentials, or raw
+scraper `requestOptions`. Country inputs accept only storefronts listed by the
+`app-store://reference/markets` resource, are case-insensitive, and default to `us`.
+
+### Apple Ads tools
+
+Market analysis and keyword intelligence tools using the Apple Search Ads API.
+Require [credential configuration](#apple-ads). When credentials are absent the server
+starts normally and Apple Ads tools return a clear unconfigured error.
+
+| Tool | Purpose |
+| --- | --- |
+| `apple_ads_get_keyword_suggestions` | Keyword suggestions + bid range signals for any app by Adam ID — including competitors. Core tool for keyword demand analysis and niche competitiveness research. |
+| `apple_ads_list_organizations` | List accessible Apple Search Ads organizations. |
+| `apple_ads_list_promoted_apps` | List apps promoted under an organization. |
+| `apple_ads_list_campaigns` | List campaigns under an organization. |
+| `apple_ads_list_ad_groups` | List ad groups within a campaign. |
+| `apple_ads_list_keywords` | List targeting keywords for an ad group. |
+| `apple_ads_list_creatives` | List creative sets under an organization. |
+
+`apple_ads_get_keyword_suggestions` works against any publicly available app Adam ID
+without requiring active campaigns. Pass a competitor's Adam ID to retrieve the keyword
+landscape they can be targeted with, along with bid min/max ranges as a competitiveness proxy.
 
 ## Configuration
 
@@ -118,9 +138,90 @@ Network policy is controlled only through validated server environment
 variables. Logs include operation names, request identifiers, duration,
 outcome, and normalized error codes without tool inputs or credentials.
 
-Apple Ads is an extension contract stub only. The default server does not read
-Apple Ads credentials, perform OAuth, make Apple Ads requests, or expose
-`apple_ads_*` tools. OCR and Streamable HTTP are deferred.
+Apple Ads tools require explicit credential configuration (see [Apple Ads](#apple-ads)).
+When credentials are absent the server starts normally and Apple Ads tools return a clear
+unconfigured error.
+
+## Apple Ads
+
+Apple Ads tools use the [Apple Search Ads Campaign Management API v5](https://developer.apple.com/documentation/apple_search_ads). All tools are read-only and disabled by default — they activate only when all required credentials are present.
+
+### Required Apple Search Ads role
+
+The Apple ID used to generate the API key must have at least the **Read Only** role in Apple Search Ads. Campaign reporting and write operations require higher roles; see Apple's role documentation for details.
+
+### Generating an API key
+
+1. Sign in to [Apple Search Ads](https://searchads.apple.com) with an Apple ID that has the required role.
+2. Open **Settings → API → Public Key**.
+3. Click **Create API Certificate**, download the `.p8` private key, and note the **Client ID**, **Team ID**, and **Key ID**.
+
+The private key can only be downloaded once. Store it securely and rotate it if it is ever exposed.
+
+### Environment variables
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `APPLE_ADS_CLIENT_ID` | Yes | Client ID from the API certificate |
+| `APPLE_ADS_TEAM_ID` | Yes | Team ID from the API certificate |
+| `APPLE_ADS_KEY_ID` | Yes | Key ID from the API certificate |
+| `APPLE_ADS_PRIVATE_KEY` | Either | PEM private key content (inline) |
+| `APPLE_ADS_PRIVATE_KEY_PATH` | Either | Path to the `.p8` PEM private key file |
+
+Set `APPLE_ADS_PRIVATE_KEY` or `APPLE_ADS_PRIVATE_KEY_PATH` — not both. Inline PEM is convenient for containerized deployments where mounting a file is impractical.
+
+### Local stdio configuration example
+
+Claude Desktop / `mcpServers` JSON:
+
+```json
+{
+  "mcpServers": {
+    "app-store": {
+      "command": "node",
+      "args": ["/path/to/repository/packages/mcp-server/dist/src/cli.js"],
+      "env": {
+        "APPLE_ADS_CLIENT_ID": "SEARCHADS.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        "APPLE_ADS_TEAM_ID": "SEARCHADS.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        "APPLE_ADS_KEY_ID": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        "APPLE_ADS_PRIVATE_KEY_PATH": "/path/to/private-key.p8"
+      }
+    }
+  }
+}
+```
+
+### Keyword suggestions
+
+`apple_ads_get_keyword_suggestions` is the primary market analysis tool. It calls
+`GET /keywords/targeting/suggestions` with any app's Adam ID — including competitor apps —
+and returns keyword suggestions with bid range signals.
+
+```
+apple_ads_get_keyword_suggestions
+  appAdamId    "284882218"           required — any App Store app numeric ID
+  matchTypes   ["BROAD", "EXACT"]   optional — filter by match type (default: both)
+  limit        20                   optional — results from API, max 100
+  offset       0                    optional — pagination
+```
+
+Each result includes `text`, `matchType`, and optional `bidMin`/`bidMax` amounts in the
+account's currency. Bid ranges are a proxy for keyword competitiveness — higher ranges
+indicate more advertiser demand.
+
+Use cases:
+- Identify keyword demand in a target niche before launch
+- Compare competitiveness across related keyword sets
+- Discover keyword opportunities from a competitor's app Adam ID
+
+### Credential rotation
+
+1. Generate a new API certificate in Apple Search Ads.
+2. Update `APPLE_ADS_PRIVATE_KEY` or `APPLE_ADS_PRIVATE_KEY_PATH` (and the key ID / client ID if they changed) in your MCP client configuration.
+3. Restart the MCP server.
+4. Revoke the old certificate in Apple Search Ads once the new credentials are confirmed working.
+
+Access tokens are short-lived (OAuth bearer tokens); there is nothing to rotate for them. Only the long-lived API certificate requires manual rotation.
 
 ## Verification
 
