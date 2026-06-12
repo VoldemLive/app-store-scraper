@@ -45,7 +45,7 @@ test('getAccessToken caches token and reuses it on second call', async () => {
   let fetchCount = 0;
 
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async (_url: string | URL | Request, _init?: RequestInit) => {
+  globalThis.fetch = async () => {
     fetchCount++;
     return new Response(JSON.stringify({ access_token: 'tok-1', expires_in: 3600 }), {
       headers: { 'Content-Type': 'application/json' }
@@ -69,7 +69,7 @@ test('getAccessToken fetches a new token after invalidate()', async () => {
   let fetchCount = 0;
 
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async (_url: string | URL | Request, _init?: RequestInit) => {
+  globalThis.fetch = async () => {
     fetchCount++;
     const token = `tok-${fetchCount}`;
     return new Response(JSON.stringify({ access_token: token, expires_in: 3600 }), {

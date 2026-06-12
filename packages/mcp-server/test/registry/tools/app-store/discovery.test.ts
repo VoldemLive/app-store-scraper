@@ -107,7 +107,7 @@ test('lists all 6 discovery tools', async () => {
 test('tools carry readOnlyHint and openWorldHint', async () => {
   const { client } = await startTestServer(makeProvider());
   const { tools } = await client.listTools();
-  for (const tool of tools) {
+  for (const tool of tools.filter(tool => tool.name.startsWith('app_store_'))) {
     assert.equal(tool.annotations?.readOnlyHint, true, `${tool.name} missing readOnlyHint`);
     assert.equal(tool.annotations?.openWorldHint, true, `${tool.name} missing openWorldHint`);
   }

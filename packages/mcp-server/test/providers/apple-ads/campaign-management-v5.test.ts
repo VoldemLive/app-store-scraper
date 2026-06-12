@@ -8,7 +8,7 @@ type FakeResponses = Record<string, unknown>;
 
 function makeClient (responses: FakeResponses): AppleAdsHttpClient {
   return {
-    get: async <T>(path: string, _opts?: unknown): Promise<T> => {
+    get: async <T>(path: string): Promise<T> => {
       const key = path.replace(/\/\d+\//g, '/{id}/').replace(/\/\d+$/, '/{id}');
       const pathWithoutQuery = path.split('?')[0]!;
       const normalized = responses[key] ?? responses[path] ?? responses[pathWithoutQuery];
@@ -16,13 +16,13 @@ function makeClient (responses: FakeResponses): AppleAdsHttpClient {
       if (normalized instanceof Error) throw normalized;
       return normalized as T;
     },
-    post: async <T>(path: string, _body?: unknown, _opts?: unknown): Promise<T> => {
+    post: async <T>(path: string): Promise<T> => {
       const normalized = responses[path];
       if (normalized === undefined) throw new Error(`Unexpected POST ${path}`);
       if (normalized instanceof Error) throw normalized;
       return normalized as T;
     },
-    request: async <T>(_method: string, _path: string, _opts?: unknown): Promise<T> => {
+    request: async <T>(): Promise<T> => {
       throw new Error('request() not expected in tests');
     }
   } as unknown as AppleAdsHttpClient;

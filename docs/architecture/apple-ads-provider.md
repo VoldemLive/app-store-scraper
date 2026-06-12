@@ -57,7 +57,7 @@ APPLE_ADS_PRIVATE_KEY_PATH=/absolute/path/outside/repository/private-key.p8
 Alternatively, pass the PEM content inline (for CI secret injection):
 
 ```sh
-APPLE_ADS_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
+APPLE_ADS_PRIVATE_KEY="<PEM private key content>"
 ```
 
 When both `APPLE_ADS_PRIVATE_KEY` and `APPLE_ADS_PRIVATE_KEY_PATH` are set,

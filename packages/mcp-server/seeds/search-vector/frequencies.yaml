@@ -1,0 +1,12 @@
+- continuous
+- daily
+- weekly
+- monthly
+- quarterly
+- seasonal
+- yearly
+- one_time
+- on_demand
+- recurring_but_infrequent
+- event_driven
+- lifecycle_based
