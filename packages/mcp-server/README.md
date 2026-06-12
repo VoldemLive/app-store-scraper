@@ -81,6 +81,27 @@ Tool inputs cannot supply arbitrary URLs, HTTP methods, headers, credentials, or
 scraper `requestOptions`. Country inputs accept only storefronts listed by the
 `app-store://reference/markets` resource, are case-insensitive, and default to `us`.
 
+### Market Hunt vector compiler
+
+`market_hunt_vector_compiler` generates a raw application-search lineage from
+the versioned YAML seed space in `seeds/market-hunt`.
+
+```yaml
+strategy: full_random
+random_seed: test-001 # optional
+```
+
+The response contains `status: ok`, one independently selected value from each
+of the 11 seed categories, and `compiler_version: "1.0"`. Supplying the same
+`random_seed` returns the same lineage while the compiler version, seed values,
+and file ordering remain unchanged. Omitting it uses system randomness.
+
+The compiler stops at raw randomness. It does not perform semantic
+interpretation, compatibility checks, application naming, market analysis,
+history, anti-repetition, memory, or decision-making. Those concerns belong to
+the calling agent. Internal seed-space loading, reload, and compiler-info
+operations are not exposed as MCP tools.
+
 ### Apple Ads tools
 
 Market analysis and keyword intelligence tools using the Apple Search Ads API.

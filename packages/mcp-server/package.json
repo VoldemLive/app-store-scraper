@@ -9,6 +9,7 @@
   "exports": "./dist/src/index.js",
   "files": [
     "dist/src",
+    "seeds",
     "README.md",
     "LICENSE"
   ],
@@ -46,9 +47,11 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "app-store-scraper": "file:../..",
+    "js-yaml": "^4.2.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.19.0",
     "eslint": "^9.39.1",
     "typescript": "^5.9.3",

@@ -44,7 +44,8 @@ configuration, verification, rotation, and incident-response guidance.
 ## MCP server
 
 The implemented [TypeScript stdio MCP server](packages/mcp-server/README.md)
-exposes every current scraper capability through ten read-only tools. It also
+exposes every current scraper capability through ten read-only tools and
+provides a local raw market-hunt vector compiler. It also
 provides App Store reference resources, reusable market-analysis prompts,
 bounded responses, cancellation, caching, retries, throttling, and normalized
 errors.

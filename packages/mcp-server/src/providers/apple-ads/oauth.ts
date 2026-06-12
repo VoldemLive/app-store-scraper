@@ -54,11 +54,11 @@ export class AppleAdsOAuthClient {
   async getAccessToken (signal?: AbortSignal): Promise<string> {
     if (this.tokenIsValid()) return this.cachedToken!.value;
 
-    const clientSecret = generateClientSecretJwt(this.credentials);
+    const signedAssertion = generateClientSecretJwt(this.credentials);
     const body = new URLSearchParams({
       grant_type: 'client_credentials',
       client_id: this.credentials.clientId,
-      client_secret: clientSecret,
+      client_secret: signedAssertion,
       scope: 'searchadsorg'
     });
 

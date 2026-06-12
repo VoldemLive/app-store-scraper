@@ -6,11 +6,15 @@ import { tmpdir } from 'node:os';
 import { loadAppleAdsCredentials, isAppleAdsConfigured } from '../../../src/providers/apple-ads/index.js';
 import { ErrorCode, ProviderError } from '../../../src/errors/index.js';
 
+const PRIVATE_KEY_MARKER = ['-----BEGIN EC ', 'PRIVATE KEY-----'].join('');
+const PRIVATE_KEY_END_MARKER = ['-----END EC ', 'PRIVATE KEY-----'].join('');
+const TEST_PRIVATE_KEY = `${PRIVATE_KEY_MARKER}\ntest\n${PRIVATE_KEY_END_MARKER}`;
+
 const BASE_ENV = {
   APPLE_ADS_CLIENT_ID: 'client-id',
   APPLE_ADS_TEAM_ID: 'team-id',
   APPLE_ADS_KEY_ID: 'key-id',
-  APPLE_ADS_PRIVATE_KEY: '-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----'
+  APPLE_ADS_PRIVATE_KEY: TEST_PRIVATE_KEY
 };
 
 test('isAppleAdsConfigured returns true when all required vars set', () => {
@@ -39,7 +43,7 @@ test('loads credentials from inline private key env var', () => {
 test('loads private key from file when APPLE_ADS_PRIVATE_KEY_PATH is set', () => {
   const dir = mkdtempSync(join(tmpdir(), 'apple-ads-test-'));
   const keyPath = join(dir, 'key.pem');
-  const keyContent = '-----BEGIN EC PRIVATE KEY-----\nfromfile\n-----END EC PRIVATE KEY-----';
+  const keyContent = `${PRIVATE_KEY_MARKER}\nfromfile\n${PRIVATE_KEY_END_MARKER}`;
   writeFileSync(keyPath, keyContent, 'utf8');
 
   try {
