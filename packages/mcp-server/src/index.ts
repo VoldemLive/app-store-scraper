@@ -8,6 +8,7 @@ export {
 export { ProviderError, ErrorCode, type ErrorCode as ErrorCodeType } from './errors/index.js';
 export * from './application/index.js';
 export * from './schemas/index.js';
+export * from './search-vector/index.js';
 export {
   AppStoreScraperAdapter,
   UnsupportedAppleAdsProvider,
