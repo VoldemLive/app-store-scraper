@@ -1,4 +1,4 @@
-# Search Vector Vector Compiler Tickets
+# Search Vector Compiler Tickets
 
 Draft tickets. Do not publish without explicit approval.
 
