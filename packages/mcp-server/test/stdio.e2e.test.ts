@@ -114,6 +114,30 @@ test('lists all 4 detail tools via stdio', async () => {
   }
 });
 
+test('lists and calls the raw search vector compiler via stdio', async () => {
+  const client = new Client({ name: 'search-vector-e2e', version: '1.0.0' });
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [cli],
+    cwd: process.cwd(),
+    env: { MCP_LOG_LEVEL: 'error' },
+    stderr: 'pipe'
+  });
+
+  try {
+    await client.connect(transport);
+    const { tools } = await client.listTools();
+    assert.ok(tools.some(tool => tool.name === 'search_vector_compiler'));
+    const result = await client.callTool({
+      name: 'search_vector_compiler',
+      arguments: { strategy: 'full_random', random_seed: 'stdio-test' }
+    }) as { structuredContent?: { data?: { status?: string } } };
+    assert.equal(result.structuredContent?.data?.status, 'ok');
+  } finally {
+    await client.close();
+  }
+});
+
 test('lists all 5 reference resources via stdio', async () => {
   const client = new Client({ name: 'resource-e2e', version: '1.0.0' });
   const transport = new StdioClientTransport({

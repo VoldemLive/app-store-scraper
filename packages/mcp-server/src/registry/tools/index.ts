@@ -4,6 +4,7 @@ import type { AppleAdsProvider } from '../../providers/apple-ads/types.js';
 import type { ToolExecutor } from '../../application/index.js';
 import { registerDiscoveryTools, registerDetailsTools } from './app-store/index.js';
 import { registerAppleAdsTools } from './apple-ads/index.js';
+import { registerSearchVectorTools } from './search-vector/index.js';
 
 export type ToolProviders = {
   appStore?: AppStoreProvider;
@@ -15,6 +16,7 @@ export function registerTools (
   providers: ToolProviders,
   executeTool: ToolExecutor
 ): void {
+  registerSearchVectorTools(server, executeTool);
   if (providers.appStore !== undefined) {
     registerDiscoveryTools(server, providers.appStore, executeTool);
     registerDetailsTools(server, providers.appStore, executeTool);
