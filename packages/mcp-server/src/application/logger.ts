@@ -11,6 +11,7 @@ export type LogEvent = {
   durationMs?: number;
   outcome?: 'success' | 'error';
   code?: string;
+  details?: Record<string, unknown>;
 };
 
 export type Logger = {

@@ -2,7 +2,7 @@ import { createPrivateKey, createSign } from 'node:crypto';
 import type { AppleAdsCredentials } from './credentials.js';
 import { ErrorCode, ProviderError } from '../../errors/index.js';
 
-const TOKEN_URL = 'https://appleid.apple.com/auth/oauth2/token';
+export const APPLE_ADS_TOKEN_URL = 'https://appleid.apple.com/auth/oauth2/token';
 const CLIENT_SECRET_TTL_SECONDS = 15_778_476; // 6 months
 const TOKEN_EXPIRY_BUFFER_SECONDS = 60;
 
@@ -64,7 +64,7 @@ export class AppleAdsOAuthClient {
 
     let response: Response;
     try {
-      response = await fetch(TOKEN_URL, {
+      response = await fetch(APPLE_ADS_TOKEN_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,
