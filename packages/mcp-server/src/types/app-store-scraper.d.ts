@@ -17,4 +17,13 @@ declare module 'app-store-scraper' {
   export const device: Record<string, string>;
   export const sort: Record<string, string>;
   export const markets: Record<string, number>;
+
+  export const APP_PAGE_URL_TEMPLATE: string;
+  export const LOOKUP_URL: string;
+  export const RATINGS_URL_TEMPLATE: string;
+  export const REVIEWS_URL_TEMPLATE: string;
+  export const RSS_CHARTS_URL: string;
+  export const SEARCH_URL: string;
+  export const SIMILAR_APPS_URL_TEMPLATE: string;
+  export const SUGGEST_URL: string;
 }

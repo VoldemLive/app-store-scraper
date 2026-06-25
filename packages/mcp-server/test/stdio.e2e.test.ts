@@ -8,6 +8,24 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 const cli = resolve('dist/src/cli.js');
 
+function waitFor (predicate: () => boolean, timeoutMs = 2000): Promise<void> {
+  return new Promise((resolveWait, rejectWait) => {
+    const started = Date.now();
+    const poll = () => {
+      if (predicate()) {
+        resolveWait();
+        return;
+      }
+      if (Date.now() - started >= timeoutMs) {
+        rejectWait(new Error('Timed out waiting for condition'));
+        return;
+      }
+      setTimeout(poll, 25);
+    };
+    poll();
+  });
+}
+
 test('completes an MCP handshake and ping over stdio without stdout noise', async () => {
   const client = new Client({
     name: 'mcp-server-e2e-test',
@@ -38,6 +56,77 @@ test('completes an MCP handshake and ping over stdio without stdout noise', asyn
       version: '9.8.7'
     });
     assert.equal(stderr, '');
+  } finally {
+    await client.close();
+  }
+});
+
+test('logs MCP and service connection points on startup stderr', async () => {
+  const client = new Client({
+    name: 'mcp-server-startup-log-test',
+    version: '1.0.0'
+  });
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [cli],
+    cwd: process.cwd(),
+    env: {
+      MCP_SERVER_NAME: 'startup-log-server',
+      MCP_SERVER_VERSION: '1.2.3',
+      MCP_LOG_LEVEL: 'info'
+    },
+    stderr: 'pipe'
+  });
+  let stderr = '';
+  transport.stderr?.on('data', chunk => {
+    stderr += chunk.toString();
+  });
+
+  try {
+    await client.connect(transport);
+    await waitFor(() => stderr.includes('mcp_server_startup'));
+
+    const logs = stderr.trim().split('\n').map(line => JSON.parse(line) as {
+      operation?: string;
+      details?: {
+        mcp?: {
+          transport?: string;
+          serverName?: string;
+          serverVersion?: string;
+          connectionHint?: string;
+          clientConfig?: {
+            mcpServers?: {
+              app_store?: {
+                command?: string;
+                args?: string[];
+                env?: Record<string, string>;
+              };
+            };
+          };
+        };
+        services?: Array<{ name?: string; endpoint?: string }>;
+      };
+    });
+    const startup = logs.find(log => log.operation === 'mcp_server_startup');
+    assert.ok(startup);
+    assert.equal(startup.details?.mcp?.transport, 'stdio');
+    assert.equal(startup.details?.mcp?.serverName, 'startup-log-server');
+    assert.equal(startup.details?.mcp?.serverVersion, '1.2.3');
+    assert.match(startup.details?.mcp?.connectionHint ?? '', /stdio has no HTTP URL or port/);
+    assert.equal(startup.details?.mcp?.clientConfig?.mcpServers?.app_store?.command, process.execPath);
+    assert.deepEqual(startup.details?.mcp?.clientConfig?.mcpServers?.app_store?.args, [cli]);
+    assert.deepEqual(startup.details?.mcp?.clientConfig?.mcpServers?.app_store?.env, {
+      MCP_LOG_LEVEL: 'info',
+      MCP_REQUEST_TIMEOUT_MS: '10000'
+    });
+    assert.ok(startup.details?.services?.some(service =>
+      service.name === 'app-store-lookup' &&
+      service.endpoint === 'https://itunes.apple.com/lookup'
+    ));
+    assert.ok(startup.details?.services?.some(service =>
+      service.name === 'apple-ads-api' &&
+      service.endpoint === 'https://api.searchads.apple.com/api/v5'
+    ));
   } finally {
     await client.close();
   }
