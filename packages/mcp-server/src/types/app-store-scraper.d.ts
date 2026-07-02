@@ -11,17 +11,24 @@ declare module 'app-store-scraper' {
   export const reviews: ScraperFn;
   export const ratings: ScraperFn;
   export const versionHistory: ScraperFn;
+  export const genres: ScraperFn;
+  export const grouping: ScraperFn;
+  export const room: ScraperFn;
 
   export const collection: Record<string, string>;
   export const category: Record<string, number>;
   export const device: Record<string, string>;
   export const sort: Record<string, string>;
   export const markets: Record<string, number>;
+  export const GENRE_GROUPING_MAP: Record<number, number>;
 
   export const APP_PAGE_URL_TEMPLATE: string;
+  export const GENRES_URL: string;
+  export const GROUPING_URL: string;
   export const LOOKUP_URL: string;
   export const RATINGS_URL_TEMPLATE: string;
   export const REVIEWS_URL_TEMPLATE: string;
+  export const ROOM_URL: string;
   export const RSS_CHARTS_URL: string;
   export const SEARCH_URL: string;
   export const SIMILAR_APPS_URL_TEMPLATE: string;

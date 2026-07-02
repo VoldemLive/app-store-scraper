@@ -103,6 +103,9 @@ function makeScraper (overrides: Partial<AppStoreScraper> = {}): AppStoreScraper
     reviews: noop,
     ratings: noop,
     versionHistory: noop,
+    genres: noop,
+    grouping: noop,
+    room: noop,
     ...overrides
   };
 }

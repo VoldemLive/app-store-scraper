@@ -1,8 +1,20 @@
 import { assert } from 'chai';
 import store from '../index.js';
+import { parseDeveloperId } from '../lib/list.js';
 import { assertValidApp, assertValidUrl } from './common.js';
 
 describe('List method', () => {
+  it('should parse developer IDs from App Store URLs with query parameters', () => {
+    assert.equal(
+      parseDeveloperId('https://apps.apple.com/us/developer/openai-opco-llc/id1684349733?uo=2'),
+      '1684349733'
+    );
+    assert.equal(
+      parseDeveloperId('https://itunes.apple.com/us/artist/sling-tv-llc/959665097?mt=8&uo=2'),
+      undefined
+    );
+  });
+
   it('should fetch a valid application list for the given category and collection', () => {
     return store.list({
       category: store.category.GAMES_ACTION,

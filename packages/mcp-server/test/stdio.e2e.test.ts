@@ -145,7 +145,7 @@ test('reports startup failure only on stderr', () => {
   assert.equal(result.stderr, 'MCP server startup failed.\n');
 });
 
-test('lists all 6 discovery tools via stdio', async () => {
+test('lists all 9 discovery tools via stdio', async () => {
   const client = new Client({ name: 'tool-discovery-e2e', version: '1.0.0' });
   const transport = new StdioClientTransport({
     command: process.execPath,
@@ -165,7 +165,10 @@ test('lists all 6 discovery tools via stdio', async () => {
       'app_store_list_apps',
       'app_store_get_developer_apps',
       'app_store_get_suggestions',
-      'app_store_get_similar_apps'
+      'app_store_get_similar_apps',
+      'app_store_get_genres',
+      'app_store_get_grouping',
+      'app_store_get_room_apps'
     ];
     for (const name of expected) {
       assert.ok(names.includes(name), `Missing tool: ${name}`);
@@ -227,7 +230,7 @@ test('lists and calls the raw search vector compiler via stdio', async () => {
   }
 });
 
-test('lists all 5 reference resources via stdio', async () => {
+test('lists all 6 reference resources via stdio', async () => {
   const client = new Client({ name: 'resource-e2e', version: '1.0.0' });
   const transport = new StdioClientTransport({
     command: process.execPath,
@@ -246,7 +249,8 @@ test('lists all 5 reference resources via stdio', async () => {
       'app-store://reference/categories',
       'app-store://reference/sort',
       'app-store://reference/devices',
-      'app-store://reference/markets'
+      'app-store://reference/markets',
+      'app-store://reference/groupings'
     ];
     for (const uri of expected) {
       assert.ok(uris.includes(uri), `Missing resource: ${uri}`);

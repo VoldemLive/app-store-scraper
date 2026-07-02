@@ -1,4 +1,14 @@
 export { countryInput } from './inputs.js';
+export {
+  GenreSchema,
+  GroupingSectionSchema,
+  GroupingSchema,
+  RoomAppSchema,
+  type Genre,
+  type GroupingSection,
+  type Grouping,
+  type RoomApp
+} from './grouping.js';
 export { AppSchema, AppSummarySchema, type App, type AppSummary } from './app.js';
 export { ReviewSchema, type Review } from './review.js';
 export { RatingsSchema, type Ratings } from './ratings.js';

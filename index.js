@@ -10,6 +10,8 @@ import similar, { SIMILAR_APPS_URL_TEMPLATE } from './lib/similar.js';
 import reviews, { REVIEWS_URL_TEMPLATE } from './lib/reviews.js';
 import ratings, { RATINGS_URL_TEMPLATE } from './lib/ratings.js';
 import versionHistory from './lib/version-history.js';
+import genres, { GENRES_URL } from './lib/genres.js';
+import { grouping, room, GROUPING_URL, ROOM_URL, GENRE_GROUPING_MAP } from './lib/grouping.js';
 import { APP_PAGE_URL_TEMPLATE } from './lib/app-page.js';
 import { LOOKUP_URL } from './lib/common.js';
 import constants, { category, collection, device, markets, sort } from './lib/constants.js';
@@ -24,7 +26,10 @@ const methods = {
   similar,
   reviews,
   ratings,
-  versionHistory
+  versionHistory,
+  genres,
+  grouping,
+  room
 };
 
 export function memoized (opts) {
@@ -47,6 +52,11 @@ export {
   collection,
   developer,
   device,
+  GENRE_GROUPING_MAP,
+  genres,
+  GENRES_URL,
+  grouping,
+  GROUPING_URL,
   LOOKUP_URL,
   list,
   markets,
@@ -55,6 +65,8 @@ export {
   ratings,
   REVIEWS_URL_TEMPLATE,
   reviews,
+  room,
+  ROOM_URL,
   RSS_CHARTS_URL,
   search,
   SEARCH_URL,
