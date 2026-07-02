@@ -217,7 +217,7 @@ export function registerDiscoveryTools (
 
   server.tool(
     'app_store_get_genres',
-    'Retrieve the App Store genre/category tree from Apple. Returns official categories and their subcategories (Games, Magazines & Newspapers, and Stickers have subcategories). Cached for 24 hours. See app-store://reference/categories for static IDs.',
+    'Retrieve the App Store genre/category tree from Apple. Returns official categories and their subcategories (Games, Magazines & Newspapers, and Stickers have subcategories). Cached for 7 days. See app-store://reference/categories for static IDs.',
     {
       genreId: z.number().int().positive().optional()
         .describe('Genre numeric ID to fetch (default: 36 = App Store root, returns full tree)'),
@@ -241,7 +241,7 @@ export function registerDiscoveryTools (
 
   server.tool(
     'app_store_get_grouping',
-    'Retrieve Apple\'s editorial grouping (curated sections) for an App Store category. Returns named sections (rooms) that Apple uses to organise apps within a genre. These are editorial, not official taxonomy — available for 18 main iOS genres only. See app-store://reference/groupings for the genreId → groupingId map. Cached for 4 hours.',
+    'Retrieve Apple\'s editorial grouping (curated sections) for an App Store category. Returns named sections (rooms) that Apple uses to organise apps within a genre. These are editorial, not official taxonomy — available for 18 main iOS genres only. See app-store://reference/groupings for the genreId → groupingId map. Cached for 7 days.',
     {
       genreId: z.number().int().positive()
         .refine(v => validGroupingGenreIds.has(v), { message: 'No editorial grouping for this genreId — see app-store://reference/groupings' })
