@@ -6,9 +6,10 @@ import { RatingsSchema } from '../../schemas/ratings.js';
 import { PrivacyDetailsSchema } from '../../schemas/privacy.js';
 import { SuggestionSchema } from '../../schemas/suggest.js';
 import { VersionHistoryItemSchema } from '../../schemas/version-history.js';
+import { GenreSchema, GroupingSchema, RoomAppSchema } from '../../schemas/grouping.js';
 import type { ServerConfig } from '../../config.js';
-import type { AppStoreProvider, ProviderCallContext, GetAppInput, ListAppsInput, SearchAppsInput, DeveloperAppsInput, AppIdInput, AppIdentifierInput, SuggestInput, ReviewsInput } from './types.js';
-import type { App, AppSummary, Review, Ratings, PrivacyDetails, Suggestion, VersionHistoryItem } from '../../schemas/index.js';
+import type { AppStoreProvider, ProviderCallContext, GetAppInput, ListAppsInput, SearchAppsInput, DeveloperAppsInput, AppIdInput, AppIdentifierInput, SuggestInput, ReviewsInput, GetGenresInput, GetGroupingInput, GetRoomAppsInput } from './types.js';
+import type { App, AppSummary, Review, Ratings, PrivacyDetails, Suggestion, VersionHistoryItem, Genre, Grouping, RoomApp } from '../../schemas/index.js';
 
 type ScraperFn = (opts: Record<string, unknown>) => Promise<unknown>;
 type CacheEntry = { expiresAt: number; value: unknown };
@@ -30,6 +31,9 @@ export interface AppStoreScraper {
   reviews: ScraperFn;
   ratings: ScraperFn;
   versionHistory: ScraperFn;
+  genres: ScraperFn;
+  grouping: ScraperFn;
+  room: ScraperFn;
 }
 
 function normalizeError (error: unknown): ProviderError {
@@ -140,13 +144,15 @@ export class AppStoreScraperAdapter implements AppStoreProvider {
     operation: string,
     input: Record<string, unknown>,
     context: ProviderCallContext | undefined,
-    load: (opts: Record<string, unknown>) => Promise<T>
+    load: (opts: Record<string, unknown>) => Promise<T>,
+    overrideTtlMs?: number
   ): Promise<T> {
     if (context?.signal?.aborted) {
       throw new ProviderError(ErrorCode.CANCELLED, 'Operation cancelled', false);
     }
     const cache = this.controls?.cache;
-    if (cache === undefined || cache.ttlMs === 0 || cache.maxEntries === 0) {
+    const ttlMs = overrideTtlMs ?? cache?.ttlMs;
+    if (cache === undefined || ttlMs === undefined || ttlMs === 0 || cache.maxEntries === 0) {
       return load(this.options(input, context));
     }
 
@@ -163,7 +169,7 @@ export class AppStoreScraperAdapter implements AppStoreProvider {
       if (oldest === undefined) break;
       this.cache.delete(oldest);
     }
-    this.cache.set(key, { expiresAt: Date.now() + cache.ttlMs, value });
+    this.cache.set(key, { expiresAt: Date.now() + ttlMs, value });
     return value;
   }
 
@@ -268,6 +274,30 @@ export class AppStoreScraperAdapter implements AppStoreProvider {
     ));
   }
 
+  getGenres (input: GetGenresInput, context?: ProviderCallContext): Promise<Genre> {
+    return this.cached('getGenres', input as Record<string, unknown>, context, opts => callScraper(
+      this.scraper.genres,
+      opts,
+      GenreSchema
+    ), 7 * 24 * 60 * 60 * 1000);
+  }
+
+  getGrouping (input: GetGroupingInput, context?: ProviderCallContext): Promise<Grouping> {
+    return this.cached('getGrouping', input as Record<string, unknown>, context, opts => callScraper(
+      this.scraper.grouping,
+      opts,
+      GroupingSchema
+    ), 7 * 24 * 60 * 60 * 1000);
+  }
+
+  getRoomApps (input: GetRoomAppsInput, context?: ProviderCallContext): Promise<RoomApp[]> {
+    return this.cached('getRoomApps', input as Record<string, unknown>, context, opts => callScraper(
+      this.scraper.room,
+      opts,
+      z.array(RoomAppSchema)
+    ), 24 * 60 * 60 * 1000);
+  }
+
   static async create (
     controls?: Pick<ServerConfig, 'request' | 'cache'>
   ): Promise<AppStoreScraperAdapter> {
@@ -282,7 +312,10 @@ export class AppStoreScraperAdapter implements AppStoreProvider {
       similar: mod['similar'] as ScraperFn,
       reviews: mod['reviews'] as ScraperFn,
       ratings: mod['ratings'] as ScraperFn,
-      versionHistory: mod['versionHistory'] as ScraperFn
+      versionHistory: mod['versionHistory'] as ScraperFn,
+      genres: mod['genres'] as ScraperFn,
+      grouping: mod['grouping'] as ScraperFn,
+      room: mod['room'] as ScraperFn
     };
     return new AppStoreScraperAdapter(scraper, controls);
   }

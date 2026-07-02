@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { collection, category, sort, device, markets } from 'app-store-scraper';
+import { collection, category, sort, device, markets, GENRE_GROUPING_MAP } from 'app-store-scraper';
 
 const MIME = 'application/json';
 
@@ -8,7 +8,8 @@ const URI = {
   categories: 'app-store://reference/categories',
   sort: 'app-store://reference/sort',
   devices: 'app-store://reference/devices',
-  markets: 'app-store://reference/markets'
+  markets: 'app-store://reference/markets',
+  groupings: 'app-store://reference/groupings'
 } as const;
 
 const PAYLOAD = {
@@ -16,7 +17,8 @@ const PAYLOAD = {
   categories: JSON.stringify(category, null, 2),
   sort: JSON.stringify(sort, null, 2),
   devices: JSON.stringify(device, null, 2),
-  markets: JSON.stringify(markets, null, 2)
+  markets: JSON.stringify(markets, null, 2),
+  groupings: JSON.stringify(GENRE_GROUPING_MAP, null, 2)
 } as const;
 
 export function registerReferenceResources (server: McpServer): void {
@@ -77,6 +79,18 @@ export function registerReferenceResources (server: McpServer): void {
     },
     () => ({
       contents: [{ uri: URI.markets, mimeType: MIME, text: PAYLOAD.markets }]
+    })
+  );
+
+  server.resource(
+    'app-store-groupings',
+    URI.groupings,
+    {
+      description: 'Mapping of iOS App Store genreId to Apple groupingId for use with app_store_get_grouping. Only 18 main genres have editorial groupings; Books, Medical, Magazines, Food, Shopping, and Catalogs do not.',
+      mimeType: MIME
+    },
+    () => ({
+      contents: [{ uri: URI.groupings, mimeType: MIME, text: PAYLOAD.groupings }]
     })
   );
 }

@@ -1,4 +1,4 @@
-import type { App, AppSummary, Review, Ratings, PrivacyDetails, Suggestion, VersionHistoryItem } from '../../schemas/index.js';
+import type { App, AppSummary, Review, Ratings, PrivacyDetails, Suggestion, VersionHistoryItem, Genre, Grouping, RoomApp } from '../../schemas/index.js';
 import type { ProviderCallContext } from '../types.js';
 export type { ProviderCallContext } from '../types.js';
 
@@ -59,6 +59,23 @@ export type ReviewsInput = {
   sort?: string;
 };
 
+export type GetGenresInput = {
+  genreId?: number;
+  country?: string;
+};
+
+export type GetGroupingInput = {
+  genreId?: number;
+  groupingId?: number;
+  country?: string;
+};
+
+export type GetRoomAppsInput = {
+  roomId: string;
+  genreId?: number;
+  country?: string;
+};
+
 export interface AppStoreProvider {
   getApp(input: GetAppInput, context?: ProviderCallContext): Promise<App>;
   listApps(input: ListAppsInput, context?: ProviderCallContext): Promise<AppSummary[] | App[]>;
@@ -70,4 +87,7 @@ export interface AppStoreProvider {
   getReviews(input: ReviewsInput, context?: ProviderCallContext): Promise<Review[]>;
   getRatings(input: AppIdInput, context?: ProviderCallContext): Promise<Ratings>;
   getVersionHistory(input: AppIdInput, context?: ProviderCallContext): Promise<VersionHistoryItem[]>;
+  getGenres(input: GetGenresInput, context?: ProviderCallContext): Promise<Genre>;
+  getGrouping(input: GetGroupingInput, context?: ProviderCallContext): Promise<Grouping>;
+  getRoomApps(input: GetRoomAppsInput, context?: ProviderCallContext): Promise<RoomApp[]>;
 }

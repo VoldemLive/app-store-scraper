@@ -75,6 +75,9 @@ function makeProvider (overrides: Partial<AppStoreProvider> = {}): AppStoreProvi
     getReviews: notImpl,
     getRatings: notImpl,
     getVersionHistory: notImpl,
+    getGenres: notImpl,
+    getGrouping: notImpl,
+    getRoomApps: notImpl,
     ...overrides
   };
 }

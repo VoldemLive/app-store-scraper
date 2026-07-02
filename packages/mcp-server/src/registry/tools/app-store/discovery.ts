@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { collection as collectionConst, category as categoryConst } from 'app-store-scraper';
+import { collection as collectionConst, category as categoryConst, GENRE_GROUPING_MAP } from 'app-store-scraper';
 import type { AppStoreProvider } from '../../../providers/app-store/types.js';
 import { ErrorCode, ProviderError } from '../../../errors/index.js';
 import { responseControlShape, type ResponseControls, type ToolExecutor } from '../../../application/index.js';
@@ -212,6 +212,89 @@ export function registerDiscoveryTools (
         const count = results.length;
         const label = id !== undefined ? String(id) : (appId ?? '');
         return { text: `Found ${count} app${count !== 1 ? 's' : ''} similar to ${label}.`, data: results };
+      })
+  );
+
+  server.tool(
+    'app_store_get_genres',
+    'Retrieve the App Store genre/category tree from Apple. Returns official categories and their subcategories (Games, Magazines & Newspapers, and Stickers have subcategories). Cached for 7 days. See app-store://reference/categories for static IDs.',
+    {
+      genreId: z.number().int().positive().optional()
+        .describe('Genre numeric ID to fetch (default: 36 = App Store root, returns full tree)'),
+      country: countryInput,
+      ...responseControlShape
+    },
+    READ_ONLY,
+    async ({ genreId, country, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_genres', extra, controls(responseMode, fields, maxItems), async signal => {
+        const result = await provider.getGenres({
+          ...(genreId !== undefined && { genreId }),
+          ...(country !== undefined && { country })
+        }, { signal });
+        const subCount = result.subcategories?.length ?? 0;
+        const sub = subCount > 0 ? ` with ${subCount} subcategories` : '';
+        return { text: `Genre "${result.name}" (${result.id})${sub}.`, data: result };
+      })
+  );
+
+  const validGroupingGenreIds = new Set(Object.keys(GENRE_GROUPING_MAP).map(Number));
+
+  server.tool(
+    'app_store_get_grouping',
+    'Retrieve Apple\'s editorial grouping (curated sections) for an App Store category. Returns named sections (rooms) that Apple uses to organise apps within a genre. These are editorial, not official taxonomy — available for 18 main iOS genres only. See app-store://reference/groupings for the genreId → groupingId map. Cached for 7 days.',
+    {
+      genreId: z.number().int().positive()
+        .refine(v => validGroupingGenreIds.has(v), { message: 'No editorial grouping for this genreId — see app-store://reference/groupings' })
+        .optional()
+        .describe('Genre numeric ID (e.g. 6012 for Lifestyle). See app-store://reference/groupings'),
+      groupingId: z.number().int().positive().optional()
+        .describe('Apple grouping ID (direct, bypasses genreId lookup)'),
+      country: countryInput,
+      ...responseControlShape
+    },
+    READ_ONLY,
+    async ({ genreId, groupingId, country, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_grouping', extra, controls(responseMode, fields, maxItems), async signal => {
+        if ((genreId === undefined) === (groupingId === undefined)) {
+          throw new ProviderError(ErrorCode.INVALID_ARGUMENT, 'Provide exactly one of genreId or groupingId', false);
+        }
+        const result = await provider.getGrouping({
+          ...(genreId !== undefined && { genreId }),
+          ...(groupingId !== undefined && { groupingId }),
+          ...(country !== undefined && { country })
+        }, { signal });
+        const count = result.sections.length;
+        return {
+          text: `Found ${count} editorial section${count !== 1 ? 's' : ''} for genre ${result.genreId}.`,
+          data: result
+        };
+      })
+  );
+
+  server.tool(
+    'app_store_get_room_apps',
+    'Retrieve apps within a specific editorial section (room) of an App Store grouping. Apps are returned in Apple\'s curated order — use the array index to pick by position. Apple caps rooms at ~32 apps; these are editorial picks, not the full category catalogue. Use app_store_get_grouping first to obtain roomId values.',
+    {
+      roomId: z.string().min(1)
+        .describe('Room ID (fcId) from app_store_get_grouping sections'),
+      genreId: z.number().int().positive().optional()
+        .describe('Genre numeric ID of the parent grouping (recommended for accurate results)'),
+      country: countryInput,
+      ...responseControlShape
+    },
+    READ_ONLY,
+    async ({ roomId, genreId, country, responseMode, fields, maxItems }, extra) =>
+      executeTool('app_store_get_room_apps', extra, controls(responseMode, fields, maxItems), async signal => {
+        const results = await provider.getRoomApps({
+          roomId,
+          ...(genreId !== undefined && { genreId }),
+          ...(country !== undefined && { country })
+        }, { signal });
+        const count = results.length;
+        return {
+          text: `Found ${count} app${count !== 1 ? 's' : ''} in room ${roomId}.`,
+          data: results
+        };
       })
   );
 }

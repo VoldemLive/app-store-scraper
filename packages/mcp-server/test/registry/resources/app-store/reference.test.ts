@@ -14,7 +14,8 @@ function makeProvider (): AppStoreProvider {
   return {
     getApp: notImpl, listApps: notImpl, searchApps: notImpl, getDeveloperApps: notImpl,
     getPrivacy: notImpl, getSuggestions: notImpl, getSimilarApps: notImpl,
-    getReviews: notImpl, getRatings: notImpl, getVersionHistory: notImpl
+    getReviews: notImpl, getRatings: notImpl, getVersionHistory: notImpl,
+    getGenres: notImpl, getGrouping: notImpl, getRoomApps: notImpl
   };
 }
 
